@@ -1,0 +1,10 @@
+---
+title: "edgeR_test"
+output: html_document
+---
+#repeat iRNA pipeline
+##featureCounts
+```{r}
+file_path=c()
+```
+
