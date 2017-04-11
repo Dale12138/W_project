@@ -1,0 +1,9 @@
+INFO [2017-02-21 19:56:14] $x
+INFO [2017-02-21 19:56:14] list(intron_siggup_gene_list, exon_siggup_gene_list)
+INFO [2017-02-21 19:56:14] 
+INFO [2017-02-21 19:56:14] $category.names
+INFO [2017-02-21 19:56:14] c("intron_sig_up", "exon_sig_up")
+INFO [2017-02-21 19:56:14] 
+INFO [2017-02-21 19:56:14] $filename
+INFO [2017-02-21 19:56:14] [1] "test"
+INFO [2017-02-21 19:56:14] 

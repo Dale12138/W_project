@@ -1,0 +1,159 @@
+---
+title: "iRNA_seq_test"
+output: html_document
+---
+
+##Original iRNA-seq pipeline
+**conclusion**: from the significant gene numbers, exon analysis looks similar to intron; the edgeR part for the pipeline does not `filter out the low-count genes` which makes the results less reliable.
+
+```{r echo=F}
+intron <- read.table("~/Desktop/Dale's/iRNA_seq_results/basal_treatment_intron.txt",header=T,sep='\t')
+exon <- read.table("~/Desktop/Dale's/iRNA_seq_results/basal_treatment_exon.txt",header=T,sep='\t')
+names(intron)[14:17] <- c("1487_basal","2139_basal","1487_treat","2139_treat")
+names(exon)[14:17] <- c("1487_basal","2139_basal","1487_treat","2139_treat")
+
+```
+
+##P value distribution
+Look at the p value distribution from edgeR (remove the ones with pval=1)
+
+```{r echo=F}
+hist(intron[intron$Pval!=1,]$Pval,breaks=100,main="whole iRNA-seq intron",xlab="p value")
+hist(exon[exon$Pval!=1,]$Pval,breaks=100,main="whole iRNA-seq exon",xlab="p value")
+
+```
+```{r echo=F}
+#hist(intron$Padj,breaks=100)
+
+
+intron_sig <- intron[intron$Padj<0.1,]
+exon_sig <- exon[exon$Padj<0.1,]
+df_summary <- data.frame("intron_identified_genes"=sum(intron$Padj<.1),"I_increased_genes"=sum(intron_sig$Log2_FC>0),"I_decreased genes"=sum(intron_sig$Log2_FC<0),"exon_identified_genes"=sum(exon$Padj<.1),"E_increased genes"=sum(exon_sig$Log2_FC>0), "E_decreased genes"=sum(exon_sig$Log2_FC<0))
+df_summary
+barplot(as.numeric(df_summary),names.arg = colnames(df_summary),ylab="# of genes",main="iRNA-seq identified genes")
+hist(exon_sig$Log2_FC,breaks=100,xlab="log2_FC",main="significant genes distribution (exon)")
+hist(intron_sig$Log2_FC,breaks=100,xlab="log2_FC",main="significant genes distribution (intron)")
+```
+
+##MA_plot
+
+```{r MA_plot, echo=F}
+par(pch=19)
+plot(intron$Log2_FC~intron$logCPM,cex=0.7,col=rgb(0,0,0,alpha=0.3),xlab="log2_CPM",ylab="log2_FC",main="intron")
+abline(h=0,col="magenta",lty=2)
+intron_sig_up <- intron_sig[intron_sig$Log2_FC>0,]
+intron_sig_down<- intron_sig[intron_sig$Log2_FC<0,]
+points(intron_sig_up$Log2_FC~intron_sig_up$logCPM,col=rgb(0.7,0,0,alpha=0.3),cex=0.7)
+points(intron_sig_down$Log2_FC~intron_sig_down$logCPM,col=rgb(0,0,0.7,alpha=0.3),cex=0.7)
+abline(h=c(1,-1),col="magenta")
+
+#exon
+plot(exon$Log2_FC~exon$logCPM,cex=0.7,col=rgb(0,0,0,alpha=0.3),xlab="log2_CPM",ylab="log2_FC",main="exon")
+abline(h=0,col="magenta",lty=2)
+exon_sig_up <- exon_sig[exon_sig$Log2_FC>0,]
+exon_sig_down<- exon_sig[exon_sig$Log2_FC<0,]
+points(exon_sig_up$Log2_FC~exon_sig_up$logCPM,col=rgb(0.7,0,0,alpha=0.3),cex=0.7)
+points(exon_sig_down$Log2_FC~exon_sig_down$logCPM,col=rgb(0,0,0.7,alpha=0.3),cex=0.7)
+abline(h=c(-1,1),col="magenta")
+```
+
+**check on sig genes in details:**
+many sig_genes from iRNA_seq pipe are [0 0 0 sth] (cpm value); so the significance is not called properly... after direct filtering, it looks bettrer.
+
+```{r echo=F}
+#filtering the results of iRNA_seq pipeline
+idx1 <- rowSums(intron_sig[,14:17] > 2) >=2 #the rows of log cpm >2 must exceed at least 2
+intron_filtered_sig <- intron_sig[idx1,]
+
+#MA plot of intron_filtered_sig
+par(pch=19)
+plot(intron$Log2_FC~intron$logCPM,cex=0.7,col=rgb(0,0,0,alpha=0.3),xlab="log2_CPM",ylab="log2_FC",main="filtered total-rna intron")
+abline(h=0,col="magenta",lty=2)
+intron_filtered_sig_up <- intron_filtered_sig[intron_filtered_sig$Log2_FC>0,]
+intron_filtered_sig_down<- intron_filtered_sig[intron_filtered_sig$Log2_FC<0,]
+points(intron_filtered_sig_up$Log2_FC~intron_filtered_sig_up$logCPM,col=rgb(0.7,0,0,alpha=0.3),cex=0.7)
+points(intron_filtered_sig_down$Log2_FC~intron_filtered_sig_down$logCPM,col=rgb(0,0,0.7,alpha=0.3),cex=0.7)
+abline(h=c(1,-1),col="magenta")
+
+
+#filtering the results of iRNA_seq pipeline for exons
+idx22 <- rowSums(exon_sig[,14:17] > 2) >=2 #the rows of log cpm >2 must exceed at least 2
+exon_filtered_sig <- exon_sig[idx22,]
+
+#MA plot of exon_filtered_sig
+par(pch=19)
+plot(exon$Log2_FC~exon$logCPM,cex=0.7,col=rgb(0,0,0,alpha=0.3),xlab="log2_CPM",ylab="log2_FC",main="filtered total-rna exon")
+abline(h=0,col="magenta",lty=2)
+exon_filtered_sig_up <- exon_filtered_sig[exon_filtered_sig$Log2_FC>0,]
+exon_filtered_sig_down<- exon_filtered_sig[exon_filtered_sig$Log2_FC<0,]
+points(exon_filtered_sig_up$Log2_FC~exon_filtered_sig_up$logCPM,col=rgb(0.7,0,0,alpha=0.3),cex=0.7)
+points(exon_filtered_sig_down$Log2_FC~exon_filtered_sig_down$logCPM,col=rgb(0,0,0.7,alpha=0.3),cex=0.7)
+abline(h=c(1,-1),col="magenta")
+
+```
+
+
+##poly_rna_seq
+the same applied to polyA library
+
+
+```{r echo=F}
+polya_intron <- read.table("~/Desktop/Dale's/iRNA_seq_results/polya_basal_treatment_intron.txt",header=T,sep='\t')
+polya_exon <- read.table("~/Desktop/Dale's/iRNA_seq_results/polya_basal_treatment_exon.txt",header=T,sep='\t')
+names(intron)[14:17] <- c("1487_basal","2139_basal","1487_treat","2139_treat")
+names(exon)[14:17] <- c("1487_basal","2139_basal","1487_treat","2139_treat")
+#pvalue_distribution
+hist(polya_intron[polya_intron$Pval!=1,]$Pval,breaks=100,main="Polya intron analysis",xlab="p value")
+hist(polya_exon[polya_exon$Pval!=1,]$Pval,breaks=100,main="Polya intron analysis",xlab="p value")
+
+```
+
+log2_FC distribution
+
+```{r echo=F}
+#hist(polya_intron$Padj,breaks=100)
+sprintf("Siginicicant genes by Poly-A intron: %d",sum(polya_intron$Padj<.1))
+sprintf("Siginicicant genes by Poly-A exon: %d",sum(polya_exon$Padj<.1))
+
+polya_intron_sig <- polya_intron[polya_intron$Padj<0.1,]
+polya_exon_sig <- polya_exon[polya_exon$Padj<0.1,]
+print("sigup_intron");sum(polya_intron_sig$Log2_FC>0)
+print("sigdown_intron");sum(polya_intron_sig$Log2_FC<0)
+print("sigup_exon");sum(polya_exon_sig$Log2_FC>0)
+print("sigdown_exon");sum(polya_exon_sig$Log2_FC<0)
+
+hist(polya_exon_sig$Log2_FC,breaks=100,main="Sig. genes for PolyA exon analysis",xlab="log2_FC")
+hist(polya_intron_sig$Log2_FC,breaks=100,main="Sig. genes for PolyA intron analysis",xlab="log2_FC")
+
+print("siggup_intron");sum(polya_intron_sig$Log2_FC>1)
+print("siggdown_intron");sum(polya_intron_sig$Log2_FC< -1)
+print("siggup_exon");sum(polya_exon_sig$Log2_FC>1)
+print("siggdown_exon");sum(polya_exon_sig$Log2_FC< -1)
+```
+MA_plot:
+
+```{r echo=F}
+par(pch=19)
+plot(polya_intron$Log2_FC~polya_intron$logCPM,cex=0.7,col=rgb(0,0,0,alpha=0.3),xlab="log2_CPM",ylab="log2_FC",main="polyA intron")
+abline(h=0,col="magenta")
+polya_intron_sig_up <- polya_intron_sig[polya_intron_sig$Log2_FC>0,]
+polya_intron_sig_down<- polya_intron_sig[polya_intron_sig$Log2_FC<0,]
+points(polya_intron_sig_up$Log2_FC~polya_intron_sig_up$logCPM,col=rgb(0.7,0,0,alpha=0.3),cex=0.7)
+points(polya_intron_sig_down$Log2_FC~polya_intron_sig_down$logCPM,col=rgb(0,0,0.7,alpha=0.3),cex=0.7)
+abline(h=0.6,col="magenta",lty=2)
+abline(h=-0.6,col="magenta",lty=2)
+abline(h=1,col="magenta")
+abline(h=-1,col="magenta")
+#exon
+plot(polya_exon$Log2_FC~polya_exon$logCPM,cex=0.7,col=rgb(0,0,0,alpha=0.3),xlab="log2_CPM",ylab="log2_FC",main="polyA exon")
+abline(h=0,col="magenta")
+polya_exon_sig_up <- polya_exon_sig[polya_exon_sig$Log2_FC>0,]
+polya_exon_sig_down<- polya_exon_sig[polya_exon_sig$Log2_FC<0,]
+points(polya_exon_sig_up$Log2_FC~polya_exon_sig_up$logCPM,col=rgb(0.7,0,0,alpha=0.3),cex=0.7)
+points(polya_exon_sig_down$Log2_FC~polya_exon_sig_down$logCPM,col=rgb(0,0,0.7,alpha=0.3),cex=0.7)
+abline(h=0.6,col="magenta",lty=2)
+abline(h=-0.6,col="magenta",lty=2)
+abline(h=1,col="magenta")
+abline(h=-1,col="magenta")
+
+```

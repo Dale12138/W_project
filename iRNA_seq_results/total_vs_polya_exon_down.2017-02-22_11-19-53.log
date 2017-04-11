@@ -1,0 +1,9 @@
+INFO [2017-02-22 11:19:53] $x
+INFO [2017-02-22 11:19:53] list(exon_siggdown_gene_list, polya_exon_siggdown_gene_list)
+INFO [2017-02-22 11:19:53] 
+INFO [2017-02-22 11:19:53] $category.names
+INFO [2017-02-22 11:19:53] c("exon_sig_down", "polya_exon_sig_down")
+INFO [2017-02-22 11:19:53] 
+INFO [2017-02-22 11:19:53] $filename
+INFO [2017-02-22 11:19:53] [1] "total_vs_polya_exon_down"
+INFO [2017-02-22 11:19:53] 

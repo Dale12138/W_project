@@ -3,8 +3,75 @@ title: "edgeR_test"
 output: html_document
 ---
 #repeat iRNA pipeline
-##featureCounts
+##featureCounts (not saved..... for the code)
+the terms includes many ncRNA or psudogene something, manual r_featureCounts followed by edgeR
 ```{r}
-file_path=c()
+file
+```
+
+```{r}
+library(edgeR)
+colnames(total_rna$counts) <- c("hsap_1487_basal","hsap_2139_basal","hsap_1487_treat","hsap_2139_treat")
+y <- DGEList(counts=total_rna$counts[,1:4],genes=row.names(total_rna$counts),group=factor(c("N","N","T","T")))
+```
+begin analysis
+```{r}
+o <- order(rowSums(y$counts),decreasing = T)
+y <- y[o,]
+sum(rowSums(y$counts)>25)  # 14506 genes greater than 50 reads (infilterign); should use cpm to filter!!!
+y <- y[rowSums(y$counts)>25,]
+y$samples$lib.size <- colSums(y$counts)
+y <- calcNormFactors(y)
+y$samples
+```
+data exploratrion
+```{r}
+plotMDS(y)
+patient <- factor(c("1487","2139","1487","2139"))
+tissue <- factor(c("N","N","T","T"))
+design <- model.matrix(~patient+tissue)
+rownames(design) <- c("1487N","2139N","1487T","2139T")
+design
+
+#estimate teh dispersino
+y <- estimateGLMCommonDisp(y,design)
+y <- estimateGLMTrendedDisp(y,design)
+y <- estimateGLMTagwiseDisp(y,design)
+
+y$common.dispersion
+plotBCV(y,cex=0.4)  ##there's some problem with the BCV plot; too few dots....
+
+
+```
+
+differential expression
+```{r}
+fit <-  glmFit(y,design)
+lrt <- glmLRT(fit)
+
+all_gene_list <- topTags(lrt,n=13580)
+
+gene_sig <- all_gene_list[all_gene_list$table$FDR<.1,]
+gene_sig_up <- gene_sig[gene_sig$table$logFC>0,]
+gene_sig_down <- gene_sig[gene_sig$table$logFC<0,]
+gene_sigg_up <- gene_sig[gene_sig$table$logFC>0.6,]  ###490 siggup genes
+gene_sigg_down <- gene_sig[gene_sig$table$logFC< -0.6,] ###515 siggdown genes
+
+
+summary(gene_sig_up$table$logFC)
+summary(gene_sig_down$table$logFC)
+
+hist(all_gene_list$table$PValue,breaks=100)
+hist(gene_sig$table$logFC,breaks=100)
+
+hist(gene_sig_up$table$logFC,breaks=100)
+hist(gene_sig_down$table$logFC,breaks=100)
+#plot MA plot
+par(pch=19)
+plot(lrt$table$logFC~lrt$table$logCPM,cex=0.7,col=rgb(0,0,0,alpha=0.3))
+abline(h=0,col="magenta",lty=2)
+points(gene_sig_up$table$logFC~gene_sig_up$table$logCPM,col=rgb(0.7,0,0,alpha=0.3),cex=0.7)
+points(gene_sig_down$table$logFC~gene_sig_down$table$logCPM,col=rgb(0,0,0.7,alpha=0.3),cex=0.7)
+abline(h=c(.6,-.6),col="magenta")
 ```
 

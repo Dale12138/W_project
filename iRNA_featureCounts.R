@@ -1,0 +1,18 @@
+#!/usr/bin/Rscript
+## seems not working for the writing step.... dont konw why....
+library("Rsubread")
+dirname="/home/mdwilson/hpf_trial/liangxi/projects/rela/bam/rna_seq/"
+file_path = c("WL650_none_aortic_HAoEC_none_hsap_1487_Basal_TCAG1Aligned_uniq_sortedByReadname.bam",
+		"WL647_none_aortic_HAoEC_none_hsap_2139_Basal_TCAG1Aligned_uniq_sortedByReadname.bam",
+		"WL649_none_aortic_HAoEC_none_hsap_1487_TNFa+DMSO_TCAG1Aligned_uniq_sortedByReadname.bam",
+		"WL645_none_aortic_HAoEC_none_hsap_2139_TNFa+DMSO_TCAG1Aligned_uniq_sortedByReadname.bam")
+abs_file_path=vector('numeric',4)
+for (i in seq(length(file_path))){
+	abs_file_path[i]=paste(dirname,file_path[i],sep="")
+}
+
+total_rna_counts= featureCounts(abs_file_path,
+				annot.inbuilt="hg19", GTF.featureType="intron",strandSpecific=2,isPairedEnd=T,minFragLength=25,maxFragLength=100000,nthreads=32)
+total_rna_counts1= as.data.frame(total_rna_counts$counts,rownames=row.names(total_rna_counts$counts))
+write.table(total_rna_counts1,file="/home/mdwilson/Desktop/Dale's/RELA_RNAseq/RfC_intron_basal_treat_table.tsv",sep="\t")
+

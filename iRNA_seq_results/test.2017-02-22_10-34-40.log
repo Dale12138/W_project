@@ -1,0 +1,9 @@
+INFO [2017-02-22 10:34:40] $x
+INFO [2017-02-22 10:34:40] list(intron_siggdown_gene_list, polya_intron_siggdown_gene_list)
+INFO [2017-02-22 10:34:40] 
+INFO [2017-02-22 10:34:40] $category.names
+INFO [2017-02-22 10:34:40] c("intron_sig_down", "polya_intron_sig_down")
+INFO [2017-02-22 10:34:40] 
+INFO [2017-02-22 10:34:40] $filename
+INFO [2017-02-22 10:34:40] [1] "test"
+INFO [2017-02-22 10:34:40] 

@@ -1,0 +1,88 @@
+Here are the paths and info on RELA, cJUN, histones ChIP-seq and ATAC-seq files for human, mouse, and cow. For now I think we can focus on human samples. Also attached the excel file. Let me know if I forgot something.
+
+ChIP-seq bam files:
+
+/mdwilson/repository_V2/bam
+
+ATAC-seq bam files and peak files:
+
+/mdwilson/repository_V2/ATACseq/align
+
+RELA peaks:
+
+/mdwilson/alizadaa/RELA_data/peaks_Sep2016
+
+RELA peaks (Merged biological replicates):
+
+/mdwilson/alizadaa/RELA_data/Biomerged
+
+cJUN and histone ChIP-seq peaks:
+
+/mdwilson/ec_project/results/peak_calling/20150226_per_sample
+
+cJUN and histone ChIP-seq peaks (Merged biological replicates):
+
+/mdwilson/ec_project/results/peak_calling/20150107_mergedBioRep
+
+
+Human RELA		WL	524	ChIPseq	AA9.160.19	hsap	n/a	Aortic	HAoEC	(DSG+FA) x-linked	2139	mal	RelA	sc372	TNFa-control
+WL	527	ChIPseq	AA9.160.22	hsap	n/a	Aortic	HAoEC	(DSG+FA) x-linked	2139	mal	RelA	sc372	TNFa-treatment
+WL	528	ChIPseq	AA9.160.23	hsap	n/a	Aortic	HAoEC	(DSG+FA) x-linked	2139	mal	Input	none	TNFa-treatment
+WL	607	ChIPseq	AA9.161.23	hsap	NA	Aortic	HAoEC	(DSG+FA) x-linked	1487	mal	RelA	sc372	TNFa-treatment
+WL	608	ChIPseq	AA9.161.24	hsap	NA	Aortic	HAoEC	(DSG+FA) x-linked	1487	mal	RelA	sc372	TNFa-control
+WL	425	ChIPseq	AA9.134.3	hsap	n/a	Aortic	HAoEC	(DSG+FA) x-linked	1487	mal	Input	none	TNFa-treatment
+
+Mouse RELA		WL	558	ChIPseq	AA9.161.14	mmus	NA	Aortic	MAoEC	(DSG+FA) x-linked	B092913T2MP	mal	RelA	sc372	TNFa-treatment
+WL	559	ChIPseq	AA9.161.15	mmus	NA	Aortic	MAoEC	(DSG+FA) x-linked	B092913T2MP	mal	RelA	sc372	TNFa-control
+WL	637	ChIPseq	AA9.161.33	mmus	n/a	Aortic	MAoEC	(DSG+FA) x-linked	B092913T2MP	mal	Input	none	TNFa-treatment
+WL	510	ChIPseq	AA9.160.5	mmus	n/a	Aortic	MAoEC	(DSG+FA) x-linked	A092913T2MP	mal	RelA	sc372	TNFa-treatment
+WL	556	ChIPseq	AA9.161.12	mmus	NA	Aortic	MAoEC	(DSG+FA) x-linked	A092913T2MP	mal	RelA	sc372	TNFa-control
+WL	522	ChIPseq	AA9.160.17	mmus	n/a	Aortic	MAoEC	(DSG+FA) x-linked	A092913T2MP	mal	Input	none	TNFa-treatment
+
+Cow RELA		WL	561	ChIPseq	AA9.161.17	btau	NA	Aortic	BAoEC	(DSG+FA) x-linked	1165	NA	RelA	sc372	TNFa-treatment
+WL	562	ChIPseq	AA9.161.18	btau	NA	Aortic	BAoEC	(DSG+FA) x-linked	1165	NA	RelA	sc372	TNFa-control
+WL	521	ChIPseq	AA9.160.16	btau	n/a	Aortic	BAoEC	(DSG+FA) x-linked	1165	NA	Input	none	TNFa-treatment
+WL	564	ChIPseq	AA9.161.20	btau	NA	Aortic	BAoEC	(DSG+FA) x-linked	1190	NA	RelA	sc372	TNFa-treatment
+WL	605	ChIPseq	AA9.161.21	btau	NA	Aortic	BAoEC	(DSG+FA) x-linked	1190	NA	RelA	sc372	TNFa-control
+WL	613	ChIPseq	AA9.161.29	btau	NA	Aortic	BAoEC	(DSG+FA) x-linked	1190	NA	Input	none	TNFa-treatment
+
+ATAC-seq all species		
+WL	651	ATAC-seq	AA9.177.1	hsap	n/a	Aortic	HAoEC	NA	2139	mal	none	none	TNFa-treatment
+WL	652	ATAC-seq	AA9.177.2	hsap	n/a	Aortic	HAoEC	NA	2139	mal	none	none	TNFa-control
+WL	653	ATAC-seq	AA9.177.3	hsap	n/a	Aortic	HAoEC	NA	1487	mal	none	none	TNFa-treatment
+
+
+path
+/home/liangxi/mdwilson/repository_V2/bam
+total name
+WL524_RelA_aortic_HAoEC_sc372_hsap_2139_TNFa-control_DSC1.bam
+WL527_RelA_aortic_HAoEC_sc372_hsap_2139_TNFa-treatment_DSC1.bam
+WL528_Input_aortic_HAoEC_none_hsap_2139_TNFa-treatment_DSC1.bam
+WL607_RelA_aortic_HAoEC_sc372_hsap_1487_TNFa-treatment_DSC1.bam
+WL608_RelA_aortic_HAoEC_sc372_hsap_1487_TNFa-control_DSC1.bam
+WL425_Input_aortic_HAoEC_none_hsap_1487_TNFa-treatment_DSC1.bam
+
+narrowpeak files
+/home/liangxi/mdwilson/alizadaa/RELA_data/peaks_Sep2016/
+
+HAEC_1487_RELA_control_peaks.narrowPeak 
+HAEC_1487_RELA_TNF_peaks.narrowPeak 
+HAEC_2139_RELA_control_peaks.narrowPeak
+HAEC_2139_RELA_TNFa_peaks.narrowPeak
+
+ln -s /home/liangxi/mdwilson/repository_V2/bam/
+
+path:/home/liangxi/mdwilson/repository_V2/ATACseq/align/
+bam: 
+
+hsap_1487_TNFa-control_ATACseq.bam
+hsap_1487_TNFa-treatment_ATACseq.bam
+hsap_2139_TNFa-control_ATACseq.bam
+hsap_2139_TNFa-treatment_ATACseq.bam
+
+peakfile:
+
+hsap_1487_TNFa-control_ATACseq.hqaa.bam.macs2_peaks.broadPeak
+hsap_1487_TNFa-treatment_ATACseq.hqaa.bam.macs2_peaks.broadPeak
+hsap_2139_TNFa-control_ATACseq.hqaa.bam.macs2_peaks.broadPeak
+hsap_2139_TNFa-treatment_ATACseq.hqaa.bam.macs2_peaks.broadPeak
