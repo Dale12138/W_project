@@ -17,8 +17,10 @@ one_example: ~/Pictures/example_gene.png
 
 ```{r echo=F}
 library(edgeR)
-counttable_path <- "/home/mdwilson/hpf_trial/liangxi/projects/rela/bam/rna_seq/iRNA_seq_results/basal_treatment_intron_counttable.txt"
-counttable_path2 <- "/home/mdwilson/hpf_trial/liangxi/projects/rela/bam/rna_seq/iRNA_seq_results/basal_treatment_exon_counttable.txt"
+# counttable_path <- "/home/mdwilson/hpf_trial/liangxi/projects/rela/bam/rna_seq/iRNA_seq_results/basal_treatment_intron_counttable.txt"
+# counttable_path2 <- "/home/mdwilson/hpf_trial/liangxi/projects/rela/bam/rna_seq/iRNA_seq_results/basal_treatment_exon_counttable.txt"
+counttable_path <- "/home/mdwilson/hpf_trial/liangxi/projects/rela/bam/rna_seq/iRNA_seq_results/drug_treatment/tpca_treatment_intron_countable.txt"
+counttable_path2 <- "/home/mdwilson/hpf_trial/liangxi/projects/rela/bam/rna_seq/iRNA_seq_results/drug_treatment/tpca_treatment_exon_countable.txt"
 intron_table <- read.table(counttable_path,sep="\t",header=T)
 exon_table <- read.table(counttable_path2,sep="\t",header=T)
 colnames(intron_table)[9:12] <- c('1487_basal',"2139_basal","1487_treat","2139_treat")

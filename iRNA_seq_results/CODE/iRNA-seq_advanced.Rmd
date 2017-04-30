@@ -356,7 +356,7 @@ ggplot(data=cpm(total_intron_result[[1]]),aes(x=log2(basal1487),color=color[2]))
   geom_density(data=cpm(polya_exon_result[[1]]),aes(x=log2(treat1487),color=color[4]),bins=50,alpha=0.3)+
   geom_density(data=cpm(polya_exon_result[[1]]),aes(x=log2(treat2139),color=color[4]),bins=50,alpha=0.3)+
   labs(title="total vs polya RNA samples",x="log2cpm")+
-  scale_color_discrete(labels=c("total_intron","polya_intron","polya_exon","total_exon"),name="Type")
+  scale_color_discrete(labels=c("total_intron","polya_intron","polya_exon","total_exon"),name="Type")hjupofdasjkl
   
 
 
@@ -536,3 +536,25 @@ comparison.group <- lapply(comparison.group, names)
 overlap.genes <- Reduce(intersect,comparison.group)
 
 ```
+
+# comparsisons between TNFa and TNFa+TPCA-1
+the result is pretty weird: only find two significant genes from intron analysis; no significant genes from exon analysis??????????
+if I use whole iRNA-seq pipeline; supposed to find hundreds of significant genes
+
+```{r}
+# create a design matrix for all the test
+patient1 <- factor(c("1487","2139","1487","2139"))
+tissue1 <- factor(c("TPCA","TPCA","Treat","Treat"))
+inhibit.design <- model.matrix(~patient1+tissue1)
+rownames(inhibit.design) <- c("1487TPCA","2139TPCA","1487Treat","2139Treat")
+
+# the real start
+inhibit.path=list(intron.table="/home/mdwilson/hpf_trial/liangxi/projects/rela/bam/rna_seq/iRNA_seq_results/drug_treatment/tpca_treatment_intron_countable.txt",exon.table="/home/mdwilson/hpf_trial/liangxi/projects/rela/bam/rna_seq/iRNA_seq_results/drug_treatment/tpca_treatment_exon_countable.txt")
+inhibit.intron.result <- DE_test(inhibit.path$intron.table, design, "TPCA vs TNFa intron")
+inhibit.exon.result <- DE_test(inhibit.path$exon.table, design, "TPCA vs TNFa exon")
+
+
+
+
+```
+
