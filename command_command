@@ -1,0 +1,666 @@
+###notes when executing codes
+#the file in /repository_V2/bam got sorted and indexed. but there's reads with multiple mapping(very raw) which needs to be filtered out and re-indexed
+cJUN:
+WL	361	ChIPseq	LA4.151.7	hsap	NA	Aortic	HAoEC	x-linked	2139	mal	cJun	sc1694	TNFa-control
+WL	362	ChIPseq	LA4.151.8	hsap	NA	Aortic	HAoEC	x-linked	2139	mal	cJun	sc1694	TNFa-treatment
+WL	349	ChIPseq	LA4.148.7	hsap	NA	Aortic	HAoEC	x-linked	1487	mal	cJun	sc1694	TNFa-control
+WL	350	ChIPseq	LA4.148.8	hsap	NA	Aortic	HAoEC	x-linked	1487	mal	cJun	sc1694	TNFa-treatment
+
+samtools view -bq 1 WL362_cJun_aortic_HAoEC_sc1694_hsap_2139_TNFa-treatment_DSC1.bam >WL362_cJun_aortic_HAoEC_sc1694_hsap_2139_TNFa-treatment_DSC1_uniq.bam &
+## the -q == 1 is quite a low value;  use q >5 (can map to 1.45 location) or q >10 (can map to 1.11 locations) to filter uniquelly mapping reads
+
+
+starting index!!!!!!#ifd~/mdwilson/liangxi/cluster_fun_lib/
+samtools index WL361_cJun_aortic_HAoEC_sc1694_hsap_2139_TNFa-control_DSC1_uniq.bam
+WL361_cJun_aortic_HAoEC_sc1694_hsap_2139_TNFa-control_DSC1_uniq.bam.bai &
+
+02/02/17
+#plot atac-seq -/+ onlyhsap_1487_TNFa-treatment_ATACseq_uniq.bam usign deeptools
+bamCoverage: # to input the sorted and uniq bam file!!!! ; should use RPM to normalize reads
+bamCoverage -b hsap_2139_TNFa-treatment_ATACseq_uniq.bam -o hsap_2139_TNFa-treatment_ATACseq_uniq.bw --normalizeUsingRPKM --extendReads 200 &
+
+computeMatrix: # when mounting, the link file does not work because it uses the absolute path which does not apply to HPF path; computer two together using the merged bed file and then plotHeatmap\
+use the same bw file but separate bed files to manually cluster
+NOTE: /home/mdwilson/HPF/liangxi/projects/rela/peakfile/HAEC_merged_ATACseq_broadPeak.bed : is the file merged by 4 sample including the 2 individuals
+
+#so use the same bed file to calculate different bw files, then plotHeatmap multiple cMatrix files (they have the same regions)
+computeMatrix reference-point -S hsap_1487_TNFa-control_ATACseq_uniq.bw hsap_1487_TNFa-treatment_ATACseq_uniq.bw -R ../peakfile/HAEC_merged_ATACseq_broadPeak.bed -a 5000 -b 5000 -bs 20 -out hsap_1487_ctrl-treatment_ATACseq.hqaa.bam.macs2_peaks.cMatrix --referencePoint center &
+## if 5000 a good number???  bs =10 may be a too small num change to 20
+
+computeMatrix reference-point -S hsap_1487_TNFa-control_ATACseq_uniq.bw hsap_1487_TNFa-treatment_ATACseq_uniq.bw -R ../peakfile/HAEC_merged_ATACseq_broadPeak.bed -a 1500 -b 1500 -bs 20 -out hsap_1487_ctrl-treatment_ATACseq.hqaa.bam.macs2_peaks_1500kb.cMatrix --referencePoint center &
+
+
+plotHeatmap: #can plot many columns; each column is a cMatrix file ; doesn't work for multiple inputs-> try multiple inputs in computeMatrix
+plotHeatmap -m *.cMatrix -out ../heatmap/hsap_1487_TNFa-treatment_ATACseq_uniq.png --kmeans 4 --outFileSortedRegions ../heatmap/hsap_1487_TNFa-treatment_ATACseq_uniq.txt
+
+# calculate the characteristic region !!not working
+plotHeatmap -m hsap_1487_ctrl-treatment_ATACseq.hqaa.bam.macs2_peaks.cMatrix -out ../heatmap/hsap_1487_ctrl-treatment_ATACseq_uniq.png --kmeans 4 --outFileSortedRegions ../heatmap/hsap_1487_ctrl-treatment_ATACseq_uniq.txt 
+
+plotHeatmap -m hsap_1487_ctrl-treatment_ATACseq.hqaa.bam.macs2_peaks_1500kb.cMatrix -out ../heatmap/hsap_1487_ctrl-treatment_ATACseq_uniq_1500kb.png --kmeans 4 --outFileSortedRegions ../heatmap/hsap_1487_ctrl-treatment_ATACseq_uniq_1500kb.txt 
+
+02/07/17
+test diffbind on atac-seq datasets
+1. making the peakset files for diffbind
+/home/mdwilson/HPF/liangxi/projects/rela/bam/hsap_1487_TNFa-control_ATACseq_uniq.bam
+/home/mdwilson/HPF/liangxi/projects/rela/bam/hsap_2139_TNFa-control_ATACseq_uniq.bam
+/home/mdwilson/HPF/liangxi/projects/rela/bam/hsap_1487_TNFa-treatment_ATACseq_uniq.bam
+/home/mdwilson/HPF/liangxi/projects/rela/bam/hsap_2139_TNFa-treatment_ATACseq_uniq.bam
+
+peakfile:
+/home/mdwilson/HPF/liangxi/projects/rela/peakfile/hsap_1487_TNFa-control_ATACseq.hqaa.bam.macs2_peaks.broadPeak
+/home/mdwilson/HPF/liangxi/projects/rela/peakfile/hsap_1487_TNFa-treatment_ATACseq.hqaa.bam.macs2_peaks.broadPeak
+/home/mdwilson/HPF/liangxi/projects/rela/peakfile/hsap_2139_TNFa-control_ATACseq.hqaa.bam.macs2_peaks.broadPeak
+/home/mdwilson/HPF/liangxi/projects/rela/peakfile/hsap_2139_TNFa-treatment_ATACseq.hqaa.bam.macs2_peaks.broadPeak
+
+ ~/HPF/repository_V2/ATACseq/align/hsap_1487_TNFa-control_ATACseq.hqaa.bam.macs2_peaks.broadPeak
+ ~/HPF/repository_V2/ATACseq/align/hsap_1487_TNFa-treatment_ATACseq.hqaa.bam.macs2_peaks.broadPeak
+ ~/HPF/repository_V2/ATACseq/align/hsap_2139_TNFa-control_ATACseq.hqaa.bam.macs2_peaks.broadPeak
+ ~/HPF/repository_V2/ATACseq/align/hsap_2139_TNFa-treatment_ATACseq.hqaa.bam.macs2_peaks.broadPeak
+
+02/08/17
+
+1.use bedtools intersect to find non-sig region for atac-seq; intersect with up.bed file and down.bed file at the same time 
+Up bed file:
+/home/mdwilson/Desktop/Dale\'s/Diffbind_analysis/hsap_atac_up_peaks1.bed
+down bed file:
+/home/mdwilson/Desktop/Dale\'s/Diffbind_analysis/hsap_atac_down_peaks1.bed
+all merged regions:
+/home/mdwilson/HPF_temp/liangxi/projects/rela/peakfile/HAEC_merged_ATACseq_broadPeak.bed
+
+bedtools intersect -v -a /home/mdwilson/HPF/liangxi/projects/rela/peakfile/hsap_atac_filtered1.bed -b /home/mdwilson/Desktop/Dale\'s/Diffbind_analysis/hsap_atac_up_peaks1.bed /home/mdwilson/Desktop/Dale\'s/Diffbind_analysis/hsap_atac_down_peaks1.bed | wc -l
+
+2. use non-sig peaks, up peaks, and down peaks as input bed to plot heatmap  just look at one people : 1487
+bamcoveraged files:
+Atac-seq:
+file1=hsap_1487_TNFa-control_ATACseq_uniq.bw
+file2=hsap_1487_TNFa-treatment_ATACseq_uniq.bw
+
+rela:
+bamCoverage -b WL608_RelA_aortic_HAoEC_sc372_hsap_1487_TNFa-control_DSC1_uniq.bam -o WL608_RelA_aortic_HAoEC_sc372_hsap_1487_TNFa-control_DSC1_uniq.bw --normalizeUsingRPKM --extendReads 200 &
+
+bamCoverage -b WL607_RelA_aortic_HAoEC_sc372_hsap_1487_TNFa-treatment_DSC1_uniq.bam -o WL607_RelA_aortic_HAoEC_sc372_hsap_1487_TNFa-treatment_DSC1_uniq.bw --normalizeUsingRPKM --extendReads 200 &
+
+file3=WL608_RelA_aortic_HAoEC_sc372_hsap_1487_TNFa-control_DSC1_uniq.bw
+file4=WL607_RelA_aortic_HAoEC_sc372_hsap_1487_TNFa-treatment_DSC1_uniq.bw
+
+cjun:
+bamCoverage -b WL349_cJun_aortic_HAoEC_sc1694_hsap_1487_TNFa-control_DSC1_uniq.bam -o WL349_cJun_aortic_HAoEC_sc1694_hsap_1487_TNFa-control_DSC1_uniq.bw --normalizeUsingRPKM --extendReads 200 &
+
+routine_bamcoverage WL350_cJun_aortic_HAoEC_sc1694_hsap_1487_TNFa-treatment_DSC1_uniq.bam WL350_cJun_aortic_HAoEC_sc1694_hsap_1487_TNFa-treatment_DSC1_uniq.bw
+## write a simple shell function to get it to          "routine_bamcoverage file"
+
+file5=WL349_cJun_aortic_HAoEC_sc1694_hsap_1487_TNFa-control_DSC1_uniq.bw
+file6=WL350_cJun_aortic_HAoEC_sc1694_hsap_1487_TNFa-treatment_DSC1_uniq.bw
+
+H3K27ac:
+
+file7=WL353_H3K27Ac_aortic_HAoEC_05-1334_hsap_1487_TNFa-control_DSC1_uniq.bw
+file8=WL354_H3K27Ac_aortic_HAoEC_05-1334_hsap_1487_TNFa-treatment_DSC1_uniq.bw
+
+bedfile1=/home/mdwilson/Desktop/Dale\'s/Diffbind_analysis/hsap_atac_up_peaks1.bed
+bedfile2=/home/mdwilson/Desktop/Dale\'s/Diffbind_analysis/hsap_atac_down_peaks1.bed
+bedfile3=../peakfile/hsap_atac_filtered_nonsig_peaks.bed
+
+computematrix:
+computeMatrix reference-point -S $file1 $file2 $file3 $file4 $file5 $file6 $file7 $file8 -R $bedfile1 $bedfile2  $bedfile3 -a 1500 -b 1500 -bs 20 -out hsap_1487_allfactor_basedon_atac_1500kb.cMatrix --referencePoint center &
+commandline in computeMatrix.sh
+
+02/09/17
+3. plotHeatmap
+plotHeatmap -m hsap_1487_allfactor_basedon_atac_1500kb.cMatrix -out ../heatmap/hsap_1487_allfactor_basedon_atac_1500kb.png --outFileSortedRegions ../heatmap/hsap_1487_allfactor_basedon_atac_1500kb.txt
+
+#turns out cannot be seen due to too small regions of the up and down files; so do up and down ,  and the comman region
+
+# store all the customized functions
+
+plotHeatmap -m hsap_1487_allfactor_basedon_atac_sig_1500kb.cMatrix -out ../heatmap/hsap_1487_allfactor_basedon_atac_sig_1500kb.png --outFileSortedRegions ../heatmap/hsap_1487_allfactor_basedon_atac_sig_1500kb.txt 
+
+#cluster
+plotHeatmap -m hsap_1487_allfactor_basedon_atac_sig_1500kb.cMatrix -out ../heatmap/hsap_1487_allfactor_basedon_atac_sig_1500kb_hclust.png --hclust 4 --outFileSortedRegions ../heatmap/hsap_1487_allfactor_basedon_atac_sig_1500kb_hclust.txt  ## seems only work on group one
+
+plotHeatmap -m hsap_1487_allfactor_basedon_atac_nonsig_1500kb.cMatrix -out ../heatmap/hsap_1487_allfactor_basedon_atac_nonsig_1500kb.png --outFileSortedRegions ../heatmap/hsap_1487_allfactor_basedon_atac_nonsig_1500kb.txt
+
+#cluster
+plotHeatmap -m hsap_1487_allfactor_basedon_atac_nonsig_1500kb.cMatrix -out ../heatmap/hsap_1487_allfactor_basedon_atac_nonsig_1500kb_kmeans.png --kmeans 4 --outFileSortedRegions ../heatmap/hsap_1487_allfactor_basedon_atac_nonsig_1500kb_kmeans.txt
+
+
+[[[get the top 10000 peaks from non-sig atac regions (overlap with macs2_peakfile with scores)]]]:
+~/HPF/repository_V2/ATACseq/align/hsap_1487_TNFa-control_ATACseq.hqaa.bam.macs2_peaks.broadPeak
+1. bedtools intersect + bedtools groupby
+# roughly overlap with hsap1487, atac+ ones to get the top 10000 region
+~/HPF/repository_V2/ATACseq/align/hsap_1487_TNFa-treatment_ATACseq.hqaa.bam.macs2_peaks.broadPeak
+bedtools intersect -a hsap_atac_filtered_nonsig_peaks.bed -b ~/HPF/repository_V2/ATACseq/align/hsap_1487_TNFa-treatment_ATACseq.hqaa.bam.macs2_peaks.broadPeak -wa -wb | bedtools groupby -i - -g 1,2,3 -c 10 -o max |less
+whole code:
+bedtools intersect -a hsap_atac_filtered_nonsig_peaks.bed -b ~/HPF/repository_V2/ATACseq/align/hsap_1487_TNFa-treatment_ATACseq.hqaa.bam.macs2_peaks.broadPeak -wa -wb | bedtools groupby -i - -g 1,2,3 -c 10 -o max |sort -k4 -nr |sed -n '1,10000p'|cut -f1-3 >hsap_atac_filtered_nonsig_peaks_top10000.bed 
+
+02/10/17
+1. filter the blacklist regions out from the atac-seq non-sig regions from heatmap
+~/HPF/huayun/ganno/hg19/hg19_blacklist.bed
+
+bedtools intersect -v -a file1 -b ~/HPF/huayun/ganno/hg19/hg19_blacklist.bed | wc -l
+
+2. GO enrichment on Rela+/ATAC- regions:/ hsap_1437/2139 merged peaks 
+Rela peak files:
+HAEC1487_2139_ctrl_TNFa_merged_narrowPeak_blacklistout.bed
+ATAC+ region peak:
+hsap_atac_filtered1.bed
+
+bedtools intersect -v -a HAEC1487_2139_ctrl_TNFa_merged_narrowPeak_blacklistout.bed -b hsap_atac_filtered1.bed | wc -l
+hsap_merged_rela_plus_atac_minus.bed (22000 regions)
+
+overlap with original narrowpeak files (both HAEC_1487_RELA_TNF_peaks.narrowPeak and HAEC_2139_RELA_TNFa_peaks.narrowPeak) to get the scores
+~/HPF/alizadaa/RELA_data/peaks_Sep2016/HAEC_1487_RELA_TNF_peaks.narrowPeak
+~/HPF/alizadaa/RELA_data/peaks_Sep2016/HAEC_2139_RELA_TNFa_peaks.narrowPeak
+
+####using mean to collapse!!!!!!!! because its narrow peak; also want to compromise between two replicates
+bedtools intersect -a hsap_merged_rela_plus_atac_minus.bed -b ~/HPF/alizadaa/RELA_data/peaks_Sep2016/HAEC_1487_RELA_TNF_peaks.narrowPeak ~/HPF/alizadaa/RELA_data/peaks_Sep2016/HAEC_2139_RELA_TNFa_peaks.narrowPeak -wa -wb |bedtools groupby -i - -g 1,2,3 -c 11 -o mean |less
+
+##used filted out atac regions to exclude those rela peaks => which menas there still have rela peaks that have low-count atac peaks (should we include those peaks or not?????????!!!!!!!!)
+##the great on these regions results are very dirty;
+##so try exclude all macs2 called atac-peaks : still got 18000 rela peaks
+
+bedtools intersect -a hsap_merged_rela_plus_atac_minus.bed -b ~/HPF/alizadaa/RELA_data/peaks_Sep2016/HAEC_1487_RELA_TNF_peaks.narrowPeak ~/HPF/alizadaa/RELA_data/peaks_Sep2016/HAEC_2139_RELA_TNFa_peaks.narrowPeak -wa -wb |bedtools groupby -i - -g 1,2,3 -c 11 -o mean |less
+
+it looks on the region of rela+/atac- regions, there's still atac-seq peaks : so I am gonna redo it:
+
+rela peaks:
+HAEC1487_2139_ctrl_TNFa_merged_narrowPeak_blacklistout.bed
+
+atac peaks:
+atac_peak[1]=~/HPF/repository_V2/ATACseq/align/hsap_1487_TNFa-control_ATACseq.hqaa.bam.macs2_peaks.broadPeak
+atac_peak[2]=~/HPF/repository_V2/ATACseq/align/hsap_1487_TNFa-treatment_ATACseq.hqaa.bam.macs2_peaks.broadPeak
+atac_peak[3]=~/HPF/repository_V2/ATACseq/align/hsap_2139_TNFa-control_ATACseq.hqaa.bam.macs2_peaks.broadPeak
+atac_peak[4]=~/HPF/repository_V2/ATACseq/align/hsap_2139_TNFa-treatment_ATACseq.hqaa.bam.macs2_peaks.broadPeak
+
+bedtools intersect -v -a HAEC1487_2139_ctrl_TNFa_merged_narrowPeak_blacklistout.bed -b ${atac_peak[*]} >hsap_merged_rela_plus_atac_minus.bed\
+
+02/11/17
+1. prepaer for the RNA-seq analysis:
+total rna seq files:
+~/HPF/repository_V2/star_rna/WL650_none_aortic_HAoEC_none_hsap_1487_Basal_TCAG1Aligned.sortedByCoord.out.bam 
+~/HPF/repository_V2/star_rna/WL649_none_aortic_HAoEC_none_hsap_1487_TNFa+DMSO_TCAG1Aligned.sortedByCoord.out.bam
+
+~/HPF/repository_V2/star_rna/WL647_none_aortic_HAoEC_none_hsap_2139_Basal_TCAG1Aligned.sortedByCoord.out.bam
+~/HPF/repository_V2/star_rna/WL645_none_aortic_HAoEC_none_hsap_2139_TNFa+DMSO_TCAG1Aligned.sortedByCoord.out.bam
+
+
+samtools view ~/HPF/repository_V2/star_rna/WL650_none_aortic_HAoEC_none_hsap_1487_Basal_TCAG1Aligned.sortedByCoord.out.bam |cut -f3 | sort -n |less
+
+
+#change the uniq reads threshold to 5 instead of 1!!!!!!!!!
+when I tried for loop to do this; it shortens the file sizes and finishes very quick.... i see, the reads are appending with time!!!
+
+
+for file in *sortedByCoord
+do 
+
+done
+
+samtools view -bq 5 WL645_none_aortic_HAoEC_none_hsap_2139_TNFa+DMSO_TCAG1Aligned_sortedByCoord.bam > WL645_none_aortic_HAoEC_none_hsap_2139_TNFa+DMSO_TCAG1Aligned_sortedByCoord_uniq.bam
+
+
+02/13/17
+1. iRNA seq pipeline: 
+the code I use:
+basal_bam1=WL650_none_aortic_HAoEC_none_hsap_1487_Basal_TCAG1Aligned_uniq_sortedByReadname.bam
+
+basal_bam2=WL647_none_aortic_HAoEC_none_hsap_2139_Basal_TCAG1Aligned_uniq_sortedByReadname.bam
+
+treat_bam1=WL649_none_aortic_HAoEC_none_hsap_1487_TNFa+DMSO_TCAG1Aligned_uniq_sortedByReadname.bam
+
+treat_bam2=WL645_none_aortic_HAoEC_none_hsap_2139_TNFa+DMSO_TCAG1Aligned_uniq_sortedByReadname.bam
+
+dirname=/home/liangxi/rela/bam/rna_seq/iRNA_seq_results
+
+#-s to signify it's reversely stranded
+
+perl ~/mdwilson/external_scripts/iRNA-v1.1/iRNA.pl -a $basal_bam1 $basal_bam2 -b $treat_bam1 $treat_bam2 -g hg19 -group 1 2 1 2 -count exon -pe yes -s 2 -p 4 -n basal_treatment_exon -dir $dirname &
+
+firstly sort all the uniq bam by readname:
+for file in *uniq*
+do
+prefix=`echo $file| cut -d. -f1`
+prefix=`echo $prefix| sed -e 's/sortedByCoord/sortedByReadname/g'`
+samtools sort -n $file -o ${prefix}".bam" --threads 4 &
+done
+
+02/15/14
+
+after samtools sort by readname: much more reads show up!!!! should wc -l before samtools view
+test: reads in sort_by readname file:
+
+samtools view WL645_none_aortic_HAoEC_none_hsap_2139_TNFa+DMSO_TCAG1Aligned_uniq_sortedByReadname.bam|wc -l &
+
+ploy_A:
+WL700_none_na_NA_none_hsap_2139_Basal_TCAG1Aligned.sortedByCoord.out.bam
+
+samtools view WL700_none_na_NA_none_hsap_2139_Basal_TCAG1Aligned.sortedByCoord.out.uniqPaired.bam|wc -l &
+
+alias queue_commands.py="/home/liangxi/mdwilson/scripts/utils/queue_commands.py"
+
+echo "iRNA_script" | queue_commands.py -i - -qsub_memory 32gb -p iRNA_seq_0215 
+
+cluster file transfer: 
+scp -r liangxi@hpf.ccm.sickkids.ca:/home/liangxi/rela/bam/rna_seq/iRNA_seq_results/ .
+
+02/16/17
+look at the ploy-A data
+link them:
+dir_name=/home/liangxi/mdwilson/YUK752/aln/
+
+
+file[1]=WL698_none_na_NA_none_hsap_1487_Basal_TCAG1Aligned.sortedByCoord.out.uniqPaired.bam
+file[2]=WL700_none_na_NA_none_hsap_2139_Basal_TCAG1Aligned.sortedByCoord.out.uniqPaired.bam
+
+file[3]=WL699_none_na_NA_none_hsap_1487_TNFa+DMSO_TCAG1Aligned.sortedByCoord.out.uniqPaired.bam
+file[4]=WL701_none_na_NA_none_hsap_2139_TNFa+DMSO_TCAG1Aligned.sortedByCoord.out.uniqPaired.bam
+
+for i in ${file[*]}
+do
+ln -s ${dir_name}$i
+done
+
+
+bam_uniq and sort by readname:
+
+for file in WL698* WL699* WL700* WL701*
+do 
+output=`echo $file | cut -d. -f1`
+samtools view -bq 5 $file > $output"_sortedByCoord_uniq.bam"&
+done
+
+for file in WL698*uniq.bam WL699*uniq.bam WL700*uniq.bam WL701*uniq.bam
+do
+prefix=`echo $file| cut -d. -f1`
+prefix=`echo $prefix| sed -e 's/sortedByCoord/sortedByReadname/g'`
+samtools sort -n $file -o ${prefix}".bam" --threads 8 -m 1G 
+done
+
+
+samtools sort -n WL700_none_na_NA_none_hsap_2139_Basal_TCAG1Aligned_sortedByCoord_uniq.bam -o WL700_none_na_NA_none_hsap_2139_Basal_TCAG1Aligned_sortedByReadname_uniq.bam --threads 10 -m 1G &
+
+samtools sort -n WL701_none_na_NA_none_hsap_2139_TNFa+DMSO_TCAG1Aligned_sortedByCoord_uniq.bam -o WL701_none_na_NA_none_hsap_2139_TNFa+DMSO_TCAG1Aligned_sortedByReadname_uniq.bam --threads 10 -m 1G &
+
+queue_commands.py -i samtools_sort -qsub_memory 32gb -p poly_rna_sort #qsub could be faster....
+
+II: iRNA.pl ployA-rna data
+basal_bam1=WL698_none_na_NA_none_hsap_1487_Basal_TCAG1Aligned_sortedByReadname_real_uniq.bam
+
+basal_bam2=WL700_none_na_NA_none_hsap_2139_Basal_TCAG1Aligned_sortedByReadname_real_uniq.bam
+
+treat_bam1=WL699_none_na_NA_none_hsap_1487_TNFa+DMSO_TCAG1Aligned_sortedByReadname_real_uniq.bam
+
+treat_bam2=WL701_none_na_NA_none_hsap_2139_TNFa+DMSO_TCAG1Aligned_sortedByReadname_real_uniq.bam
+
+dirname=/home/liangxi/rela/bam/rna_seq/iRNA_seq_results
+
+#-s to signify it's reversely stranded
+
+perl ~/mdwilson/external_scripts/iRNA-v1.1/iRNA.pl -mode Count -a $basal_bam1 $basal_bam2 -b $treat_bam1 $treat_bam2 -g hg19 -group 1 2 1 2 -count exon -pe yes -s 0 -p 4 -n polya_basal_treatment_exon_counttable -dir $dirname &
+
+
+@ analyze the iRNA.pl parameter:
+1. featrueCounts:
+featureCounts --primary -p -B -C -F GTF -T $p -f -s $strand -a $DATADIR/$g.$c.$countstrand.gtf -o $TMPDIR/$string @Files 2> /dev/null
+only count primary alignments!!! identified using bit 0x100 in sam/bam flag field!! check!!!!!!!!!
+-C                  Do not count read pairs that have their two ends mapping   !!!wierd!
+                      to different chromosomes or mapping to same chromosome 
+                      but on different strands.
+
+should be counted as meta-feature mode!!! iRNA pipeline is based on the level of feature level!!!!
+consider to use parameters:
+-R : output details of reads counting
+
+$DATADIR/$g.$c.$countstrand.gtf
+hg19.exon.reversestranded.gtf
+
+already checked on STAR: STAR can have high quality exon-spaning reads which can be considered 255 and primary reads stored
+checked on some output from SJ.tab file
+chr1    14830   14969   2       2       1       10      6       63
+chr1    15039   15795   2       2       1       3       5       50
+chr1    15948   16606   2       2       1       2       2       53
+chr1    16766   16853   2       2       1       0       2       26
+chr1    16766   16857   2       2       1       0       1       42
+chr1    17056   17232   2       2       1       1       21      62
+chr1    17369   17605   2       2       1       5       13      51
+chr1    17743   17914   2       2       1       5       29      61
+chr1    18062   18267   2       2       1       1       14      62
+chr1    18062   29320   2       2       1       1       1       18
+chr1    18367   24737   2       2       1       4       1       54
+chr1    18370   18912   2       2       1       0       4       44
+chr1    18380   24737   2       2       1       0       6       51
+chr1    24892   29320   2       2       1       4       2       33
+chr1    92241   112699  2       2       1       1       0       13
+
+not sure if the meta-feature problems can explain the high number significant exon-gene finding in iRNA-seq pipe line 
+
+2.edgeR: in Analyze.R
+$pair $INSTALLDIR $replication $commondisp $c @AFiles SEP @BFiles SEP2 @group SEP3 $string
+
+04/17/17
+
+default featureCOunts parameters (r_pacakge)
+featureCounts(files,
+
+	# annotation
+	annot.inbuilt="mm10",
+	annot.ext=NULL,
+	isGTFAnnotationFile=FALSE,
+	GTF.featureType="exon",
+	GTF.attrType="gene_id",
+	chrAliases=NULL,
+	
+	# level of summarization
+	useMetaFeatures=TRUE,
+	
+	# overlap between reads and features
+	allowMultiOverlap=FALSE,
+	minOverlap=1,
+	largestOverlap=FALSE,
+	readExtension5=0,
+	readExtension3=0,
+	read2pos=NULL,
+	
+	# multi-mapping reads
+	countMultiMappingReads=FALSE,
+	fraction=FALSE,
+
+	# read filtering
+	minMQS=0,
+	splitOnly=FALSE,
+	nonSplitOnly=FALSE,
+	primaryOnly=FALSE,
+	ignoreDup=FALSE,
+	
+	# strandness
+	strandSpecific=0,
+	
+	# exon-exon junctions
+	juncCounts=FALSE,
+	genome=NULL,
+	
+	# parameters specific to paired end reads
+	isPairedEnd=FALSE,
+	requireBothEndsMapped=FALSE,
+	checkFragLength=FALSE,
+	minFragLength=50,
+	maxFragLength=600,
+	countChimericFragments=TRUE,	
+	autosort=TRUE,
+	
+	# miscellaneous
+	nthreads=1,
+	maxMOp=10,
+	reportReads=FALSE)
+
+	can consider to use primaryonly=True
+
+02/19/17
+featureCOUnts -> edgeR  me and irna_pipeoine both use glmLRT methods but I only found like 200 significant genes
+
+using iRNA pipeline to get the counttable and then compare!! 
+
+iRNA seq pipeline: 
+the code I use:
+basal_bam1=WL650_none_aortic_HAoEC_none_hsap_1487_Basal_TCAG1Aligned_uniq_sortedByReadname.bam
+
+basal_bam2=WL647_none_aortic_HAoEC_none_hsap_2139_Basal_TCAG1Aligned_uniq_sortedByReadname.bam
+
+treat_bam1=WL649_none_aortic_HAoEC_none_hsap_1487_TNFa+DMSO_TCAG1Aligned_uniq_sortedByReadname.bam
+
+treat_bam2=WL645_none_aortic_HAoEC_none_hsap_2139_TNFa+DMSO_TCAG1Aligned_uniq_sortedByReadname.bam
+
+dirname=/home/liangxi/rela/bam/rna_seq/iRNA_seq_results
+
+#-s to signify it's reversely stranded
+
+perl ~/mdwilson/external_scripts/iRNA-v1.1/iRNA.pl -mode Count -a $basal_bam1 $basal_bam2 $treat_bam1 $treat_bam2 -g hg19 -group 1 2 1 2 -count exon -pe yes -s 2 -p 4 -n basal_treatment_exon_counttable -dir $dirname & [there's no -b => if use -b, it only counts the -a part]
+
+
+II: iRNA.pl ployA-rna data
+basal_bam1=WL698_none_na_NA_none_hsap_1487_Basal_TCAG1Aligned_sortedByReadname_real_uniq.bam
+
+basal_bam2=WL700_none_na_NA_none_hsap_2139_Basal_TCAG1Aligned_sortedByReadname_real_uniq.bam
+
+treat_bam1=WL699_none_na_NA_none_hsap_1487_TNFa+DMSO_TCAG1Aligned_sortedByReadname_real_uniq.bam
+
+treat_bam2=WL701_none_na_NA_none_hsap_2139_TNFa+DMSO_TCAG1Aligned_sortedByReadname_real_uniq.bam
+
+dirname=/home/liangxi/rela/bam/rna_seq/iRNA_seq_results
+
+#-s to signify it's reversely stranded
+
+perl ~/mdwilson/external_scripts/iRNA-v1.1/iRNA.pl -mode Count -a $basal_bam1 $basal_bam2 $treat_bam1 $treat_bam2 -g hg19 -group 1 2 1 2 -count intron -pe yes -s 0 -p 4 -n polya_basal_treatment_intron_counttable -dir $dirname &
+
+Conclusion: seems featureCOunts would be very different: 1). geneid term different; 2)counts number is very differntrt 
+
+
+02/20/17
+run a rscript to manually get counttable:
+total_rna_counts= featureCounts(abs_file_path,
+				annot.inbuilt="hg19", GTF.featureType="intron",strandSpecific=2,isPairedEnd=T,minFragLength=25,maxFragLength=100000,nthreads=32)
+total_rna_counts1= as.data.frame(total_rna_counts$counts,rownames=row.names(total_rna_counts$counts))
+
+compare to iRNAseq pipeline: need to add: requireBothEndsMapped =T, countChimericFragments=F
+it also uses -f !!!!!
+  -f                  Perform read counting at feature level (eg. counting 
+                      reads for exons rather than genes)
+
+iRNA.pl gtf is based on feature levels ; but since one read is not allowed to assign to  multi featuires ; so it should be the same.........
+
+featureCounts documentation says:  so maybe it cannot be used to count intron right away?????
+GTF.featureType
+a character string giving the feature type used to select rows in the GTF annotation which will be used for read summarization. exon by default. This argument is only applicable when isGTFAnnotationFile is TRUE.
+
+it seems if I want to count intron, annotation file should be provided as well. so iRNA seq file for counting should be fine.
+
+
+iRNA counttable: include 18000 coding genes; not include ncRNA...
+
+why the results between homemade and iRNA analysis so differtne? me: ~300 sig genes; iRNA_seq: ~1000 sig genes.
+I used the counttable from iRNA seq; and the counttable is highly similar to the one used in iRNA seq. why the downstream analysis makes so diffrent??? I used almost the same code as iRNA seq for edgeR.....?
+
+04/06/17
+1. look at the qc of total_RNA and polyA_RNA:
+Total_RNA_seq: paired $reverse- stranded
+for i in *bam
+do
+qualimap rnaseq -bam $i -gtf /home/mdwilson/hpf_trial/genomes/hsap/gtf/gencode.v19.annotation.gtf -p strand-specific-reverse -pe -s --java-mem-size=10G
+done
+
+polyA_RNA_seq: paired & non-stranded
+
+for i in *name_real_uniq.bam
+do
+qualimap rnaseq -bam $i -gtf /home/mdwilson/hpf_trial/genomes/hsap/gtf/gencode.v19.annotation.gtf --paired --sorted --java-mem-size=10G
+done
+
+2. counts QC (mainly globally qc)
+#input files are the counttable// can try to use the ones output by STAR
+qualimap counts -d counts_qc_text.tsv -s human &
+
+
+04/24/17
+three conditions:
+(1). basal (just water)
+(2). DMSO + TNFa 
+(3). TPCA-1 (basically in DMSO) + TNFa (NFkB inhibitor) 
+
+ideally, (1) vs (2) should be like (2) vs (3) [look at which genes are activated in (3),(2) comparisons]
+in reality, TPCA-1 also inhibits STAT3 and IkK(from phosphorylation; IKK is IkB phosphotase)
+
+look at the paper: STATs in cancer inflammation and immunity: a leading role for STAT3
+[seems two parallel pathways, but also have some sort of cross-talk];
+but I assume the stat3 pathway is not activated in cells?????
+
+1. run iRNA-seq on (3) vs (2) 
+##########
+(i) prepare for the TPCA-1 bam files: (link)
+/home/liangxi/mdwilson/repository_V2/star_rna/
+WL646_none_aortic_HAoEC_none_hsap_2139_TNFa+TPCA-1_TCAG1Aligned.sortedByCoord.out.bam
+WL648_none_aortic_HAoEC_none_hsap_1487_TNFa+TPCA-1_TCAG1Aligned.sortedByCoord.out.bam
+
+#get roughly uniq (using quality 5 as a threshold)
+for i in WL646* WL648*
+do
+samtools view -bq 5 $i > ${i%%.*}"_roughuniq.sortedByCoord.bam"
+done
+
+samtools view -bq 5 WL648_none_aortic_HAoEC_none_hsap_1487_TNFa+TPCA-1_TCAG1Aligned.sortedByCoord.out.bam > WL648_none_aortic_HAoEC_none_hsap_1487_TNFa+TPCA-1_TCAG1Aligned_roughuniq.sortedByCoord.out.bam --threads 8 &
+
+# sort by readname:
+for file in WL646*uniq* WL648*uniq*
+do
+samtools sort -n $file -o ${file%%.*}"_sortedByReadname.bam" --threads 4 &
+done
+
+samtools sort -n WL646_none_aortic_HAoEC_none_hsap_2139_TNFa+TPCA-1_TCAG1Aligned_roughuniq.sortedByCoord.bam -o WL646_none_aortic_HAoEC_none_hsap_2139_TNFa+TPCA-1_TCAG1Aligned_roughuniq.sortedByReadname.bam --threads 8&
+
+samtools sort -n WL648_none_aortic_HAoEC_none_hsap_1487_TNFa+TPCA-1_TCAG1Aligned_roughuniq.sortedByCoord.out.bam -o WL648_none_aortic_HAoEC_none_hsap_1487_TNFa+TPCA-1_TCAG1Aligned_roughuniq.sortedByReadname.out.bam --threads 8& 
+
+(ii). iRNA seq pipeline: 
+the code I use:
+tpca_bam1=WL648_none_aortic_HAoEC_none_hsap_1487_TNFa+TPCA-1_TCAG1Aligned_roughuniq.sortedByReadname.out.bam
+
+tpca_bam2=WL646_none_aortic_HAoEC_none_hsap_2139_TNFa+TPCA-1_TCAG1Aligned_roughuniq.sortedByReadname.bam
+
+treat_bam1=WL649_none_aortic_HAoEC_none_hsap_1487_TNFa+DMSO_TCAG1Aligned_uniq_sortedByReadname.bam
+
+treat_bam2=WL645_none_aortic_HAoEC_none_hsap_2139_TNFa+DMSO_TCAG1Aligned_uniq_sortedByReadname.bam
+
+dirname=/home/liangxi/rela/bam/rna_seq/iRNA_seq_results/drug_treatment
+
+#-s to signify it's reversely stranded
+
+perl ~/mdwilson/external_scripts/iRNA-v1.1/iRNA.pl -mode Count -a $tpca_bam1 $tpca_bam2 $treat_bam1 $treat_bam2 -g hg19 -count exon -pe yes -s 2 -p 4 -n tpca_treatment_exon_countable -dir $dirname &
+
+[checked on the total read counts in each exon_counted file; 30M, 28M, 26M, 35M => seems okay]
+
+perl ~/mdwilson/external_scripts/iRNA-v1.1/iRNA.pl -mode Count -a $tpca_bam1 $tpca_bam2 $treat_bam1 $treat_bam2 -g hg19 -count intron -pe yes -s 2 -p 4 -n tpca_treatment_intron_countable -dir $dirname &
+[the intron total counts in teh countable files are:2.8M, 2.5M, 2.3M, 3.4M]
+
+the created countables: 
+/home/mdwilson/hpf_trial/liangxi/projects/rela/bam/rna_seq/iRNA_seq_results/drug_treatment/tpca_treatment_exon_countable.txt
+tpca_treatment_intron_countable.txt
+
+04/25/17
+found only three significant genes for intron analysis for tpca-1 vs tnfa:
+super weird!!!!!!
+try the original iRNA-seq pipeline
+
+tpca_bam1=WL648_none_aortic_HAoEC_none_hsap_1487_TNFa+TPCA-1_TCAG1Aligned_roughuniq.sortedByReadname.out.bam
+
+tpca_bam2=WL646_none_aortic_HAoEC_none_hsap_2139_TNFa+TPCA-1_TCAG1Aligned_roughuniq.sortedByReadname.bam
+
+treat_bam1=WL649_none_aortic_HAoEC_none_hsap_1487_TNFa+DMSO_TCAG1Aligned_uniq_sortedByReadname.bam
+
+treat_bam2=WL645_none_aortic_HAoEC_none_hsap_2139_TNFa+DMSO_TCAG1Aligned_uniq_sortedByReadname.bam
+
+dirname=~/hpf_trial/liangxi/projects/rela/bam/rna_seq/iRNA_seq_results/drug_treatment
+
+
+perl ~/hpf_trial/external_scripts/iRNA-v1.1/iRNA.pl -a $tpca_bam1 $tpca_bam2 -b $treat_bam1 $treat_bam2 -g hg19 -group 1 2 1 2 -count intron -pe yes -s 2 -p 4 -n tpca_treatment_intron_result -dir $dirname &
+
+the original pipleline: 410 genes (padj<0.1 && logfc >0.6); 405 genes (padj<0.1 && logfc < -0.6); 815 significant genes in total
+
+05/01/17
+copy the super-conserved/ or human-specific RELA bindign regions
+mod_RELA_merged_conserved_cow_and_or_mouse.bed
+mod_RELA_merged_human_specific.bed
+mod_RELA_merged_ultra_conserved.bed
+
+pwd:
+/home/liangxi/mdwilson/alizadaa/RELA_data/Biomerged/compara/mod_RELA_merged_ultra_conserved.bed 
+
+the peak_numbers:
+  19538 mod_RELA_merged_conserved_cow_and_or_mouse.bed
+  46610 mod_RELA_merged_human_specific.bed
+   5027 mod_RELA_merged_ultra_conserved.bed
+
+**create the big csv table for the ploting:
+Genename FDR log2FC log2CPM  gene_type conserved_type
+(add all the genes: around 18000 genes; gene_type: low-count genes, non-significant, sig.up, sig.down)
+1. create using R Genename FDR log2FC log2CPM  gene_type (17825 coding genes)
+2. overlap to get consrved_type column:
+2.1 merge the three conserved peak files and add one column
+
+2.2 add 100kb upstream and downstream
+bedtools slop -i merged_conserved_RELA.bed -g /home/liangxi/mdwilson/genomes/hsap/ChromInfo_noRand.txt -b 100000
+
+get merged_conserved_RELA_peaks_100kb
+
+###note: the default field separater of awk is space not tab!!!!!!!!! importatn to make bed files!!!
+
+2.3 gene cordinates file overlap with the conserved file (+-100kb)
+/home/liangxi/mdwilson/genomes/hsap/gtf/gencode.v19.geneLocs.bed
+bedtools intersect + bedtools groupby
+
+bedtools intersect -a /home/liangxi/mdwilson/genomes/hsap/gtf/gencode.v19.geneLocs.bed -b merged_conserved_RELA_peaks_100kb.bed -wa -wb > genes_with_conserved_RELA_100kb.bed
+
+bedtools groupby -i genes_with_conserved_RELA_100kb.bed -g 1-5 -c 10 -o collapse
+
+the freqdsc and the freqasc parameter dont work => so i can only use collapse!!!!!!!!
+
+the final file: genes_with_conserved_RELA_100kb_collapsed.bed
+
+05/02/17
+count the occurence of the human specific, conserved and ultra-conserved peaks in each line
+
+# it's complicated when call bash within awk; oen solution is to set a fucntion adn ciet it => can use teh system function to call bash fucntion : e.g system("command",variable)
+
+awk 'BEGIN{OFS="\t"}{s1=`echo $6|grep -c two_conserved`; s2=`echo $6|grep -c human_specific`; s3=`echo $6|grep -c ultra_conserved`; print $0, s1","s2","s3}'|less  #not workign
+
+##awk gsub works!!!!!!!!!!!!!!
+awk 'BEGIN{OFS="\t"}{print $0,gsub("two_conserved","")","gsub("human_specific","")","gsub("ultra_conserved","")}' genes_with_conserved_RELA_100kb_collapsed.bed >  genes_with_conserved_RELA_100kb_collapsed_occurence.bed
+
+#not combining info from conserved peaks -genes and RNA-seq geens using R (using shell)
+#merge two files based on the spciifed columns
+LANG=en_EN 
+join -j 1 -o 1.1,1.2,1.3,1.4,1.5,2.1,2.2,2.3 < (sort -k1 gene_table_temp1) <( sort -k1 genes_with_conserved_RELA_100kb_collapsed_occurence_temp)
+# join and sort are not compatible; you need to change the LANG=en_EN then it works!!!!!!!
+total_gene_table with ~1000 genes missing because of no peaks around... | needs to add them in  
+
+awk 'BEGIN{OFS="\t"}NR==FNR{a[$1]=$0;next} !($1 in a){print $0,"NA","NA"}'  total_gene_table gene_table_temp1 >> total_gene_table 
+
+get the total_gene_table to analyze 
+
+05/09/17
+# the three_conserved_peaks are inclusive in the two_conserved ones || so need to exclude the two_conserved from three_conserved group
+**NOTE** the files created before, teh three_conserved peaks are all inclusive in the two conserved paeks
+awk 'BEGIN{OFS="\t"}{split($7,arr,",");print $1,$2,$3,$4,$5,$6,arr[1]-arr[3]","arr[2]","arr[3]}'
+**=> total_gene_table has been updated by the direct substraction!!! 
+new numbers of the three types:
+  14511 mod_RELA_merged_conserved_cow_and_or_mouse.bed
+  46610 mod_RELA_merged_human_specific.bed
+   5027 mod_RELA_merged_ultra_conserved.bed
+changed the total_gene_table; but files before that, no change yet....
+
+05/10/17
+check on the code for tpca vs treatment; and get a closure of this topic
+
+05/12/17
+1. try fastqc on the total and ployA library to see basic statistics (also to see the duplication rate)
+fastqc /hpf/largeprojects/mdwilson/repository_V2/star_rna/WL645_none_aortic_HAoEC_none_hsap_2139_TNFa+DMSO_TCAG1.R1.fastq.gz -o . --noextract --threads 12
+
+/hpf/largeprojects/mdwilson/repository_V2/star_rna/*fastq*
+
+2. use picard to estimate teh duplicate rate for all the libs
+java -jar $PICARD EstimateLibraryComplexity I=WL650_none_aortic_HAoEC_none_hsap_1487_Basal_TCAG1Aligned_uniq_sortedByReadname.bam O=WL650_none_aortic_HAoEC_none_hsap_1487_Basal_TCAG1Aligned_uniq_sortedByReadname.txt &
+# so the normal duplication rate is around 90%.... And since theis is a pair-end experiments..... so I think there may be some PCR overamplification; otherwise that does not make any sense.  [from both fastqc and picard tool results, we can observe theat there is a huge amoutn of duplication!! for total rna library]
+# for the polyA library :
+fastq
+for i in /home/huayun/mdwilson/YUK752/trim/*[12]_paired.fastq*;do fastqc $i -o . --noextract --threads 12 ; done
+!!but for polya its around 8-9 percent of duplication rate which seems very ideal...... [although it still never passes the fastqc duplicated sequences;]
+
+05/13/17
+check on the susan mandrup data about the iRNA-seq data
+1. convert sra file to fastq file using fastq-dump directly (fastq-dump .sra )
+2. gunzip fastq files
+
+3. star the fastq files
+for i in *fastq.gz
+do 
+STAR --runThreadN 12 --genomeDir /home/liangxi/mdwilson/genomes/hsap/star_index_2.5.1b/ --readFilesIn $i --readFilesCommand gunzip -c  --outFilterType BySJout --outFilterMultimapNmax 20 --alignSJoverhangMin 8 --alignSJDBoverhangMin 1 --outFilterMismatchNmax 999 --alignIntronMin 20 --alignIntronMax 1000000 --alignMatesGapMax 1000000 --quantMode GeneCounts --outSAMtype BAM SortedByCoordinate --outFileNamePrefix ./${i%%.*}"_" --outWigType wiggle
+done
+
+4. 
