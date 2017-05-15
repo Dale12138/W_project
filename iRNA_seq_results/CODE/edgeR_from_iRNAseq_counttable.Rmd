@@ -110,7 +110,7 @@ heatmap(as.matrix(scale(t(transformed.yy))),scale="none")
 plotMDS(yy2)
 #estimate teh dispersino
 yy2 <- estimateGLMCommonDisp(yy2,design)
-yy2 <- estimateGLMTrendedDisp(yy2,design)
+yy2 <- estimateGLMTrendedDisp(yy2,design) 
 yy2 <- estimateGLMTagwiseDisp(yy2,design)
 
 #yy2$common.dispersion

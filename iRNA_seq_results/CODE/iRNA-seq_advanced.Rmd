@@ -43,6 +43,7 @@ normalize <- function(yy,design){
   yy <- estimateGLMTrendedDisp(yy,design)
   yy <- estimateGLMTagwiseDisp(yy,design)
   plotBCV(yy,cex=0.4)
+  print(yy$samples)
   return(yy)
 }
 
@@ -356,7 +357,7 @@ ggplot(data=cpm(total_intron_result[[1]]),aes(x=log2(basal1487),color=color[2]))
   geom_density(data=cpm(polya_exon_result[[1]]),aes(x=log2(treat1487),color=color[4]),bins=50,alpha=0.3)+
   geom_density(data=cpm(polya_exon_result[[1]]),aes(x=log2(treat2139),color=color[4]),bins=50,alpha=0.3)+
   labs(title="total vs polya RNA samples",x="log2cpm")+
-  scale_color_discrete(labels=c("total_intron","polya_intron","polya_exon","total_exon"),name="Type")hjupofdasjkl
+  scale_color_discrete(labels=c("total_intron","polya_intron","polya_exon","total_exon"),name="Type")
   
 
 
@@ -553,8 +554,296 @@ inhibit.path=list(intron.table="/home/mdwilson/hpf_trial/liangxi/projects/rela/b
 inhibit.intron.result <- DE_test(inhibit.path$intron.table, design, "TPCA vs TNFa intron")
 inhibit.exon.result <- DE_test(inhibit.path$exon.table, design, "TPCA vs TNFa exon")
 
+```
+                                                       
+#Another section
+##plot the RNA_identified gene based on the conserved type
+to see if the significant genes can be found with conserved or human-specific or ultra-conserved rela peaks around (100kb)
+all input 17285 genes; all genes input into test genes: 10825
 
+techniqual issue: since the three conserved one is just inclusive in the two conserved group [just need to substract to get exclusive group] [the modification: change the input file by substraction]
+
+
+```{r}
+library(RColorBrewer)
+color <- brewer.pal(n=3,name="Set1")
+# gene.table <- total_intron_result[[2]][[1]]$table[,-c(4,5)]
+# gene_type <- vector("character",length(gene.table))
+# for (i in 1:nrow(gene.table)){
+#   if (gene.table$FDR[i] <0.1 & gene.table$logFC[i] > 0.6){
+#     gene_type[i] <- "sig.up"
+#   }  else if (gene.table$FDR[i] <0.1 & gene.table$logFC[i] < -0.6){
+#     gene_type[i] <- "sig.down"
+#   } else
+#     gene_type[i] <- "non.sig"
+# }
+# gene.table$gene_type <- gene_type
+# intron_table <- read.table(countable.path$total.intron.table,sep="\t",header=T)
+# all.genes<- as.character(intron_table$Symbol)
+# idx <- all.genes %in% as.character(gene.table$genes)
+# temp.table <- matrix(,length(all.genes[!idx]),5)
+# temp.table[,1] <- all.genes[!idx]
+# temp.table[,5] <- rep("low.count",nrow(temp.table))
+# colnames(temp.table) <- colnames(gene.table)
+# gene.table <- rbind(gene.table,data.frame(temp.table)) # now I have 17082 genes only without the conversed_type
+# #### usiing R to run teh two big dataframe is a disaster and needs to use two layers of for loop..... try to use bahs to do this
+# # conservation.path <- "/home/mdwilson/hpf_trial/liangxi/projects/rela/peakfile/conserved_RELA/genes_with_conserved_RELA_100kb_collapsed_occurence.bed"
+# conservation.table<- read.table(conservation.path,sep="\t",header=F,stringsAsFactors = F)
+# # #sum(gene.table$genes %in% conservation.table[,5]) ## so there's like around 1000 gnees without any peaks 100kb around\
+# gene.table.path <- "/home/mdwilson/hpf_trial/liangxi/projects/rela/peakfile/conserved_RELA/gene_table_temp"
+# write.table(gene.table,file=gene.table.path,sep="\t",row.names = F,col.names = F)
+path <- "/home/mdwilson/hpf_trial/liangxi/projects/rela/peakfile/conserved_RELA/total_gene_table"
+all.gene.table<- read.table(path,sep="\t",header=F,stringsAsFactors = F)
+all.gene.table$V6 <- NULL
+colnames(all.gene.table) <- c("genes","logFC","logCPM","FDR","gene_type","conserved_type") #note:the conserved type is two_conserved, human_specific, ultra_conserved
+human_specific <- vector("character",nrow(all.gene.table)) 
+two_conserved <- vector("character",nrow(all.gene.table)) 
+ultra_conserved <- vector("character",nrow(all.gene.table)) 
+conserved_type_list <- vector('list',3)  # two_conserved, human_specific, ultra_conserved  [order]
+for (i in 1:3){
+  conserved_type_list[[i]] <- vector("numeric",nrow(all.gene.table))
+}
+for (i in 1:nrow(all.gene.table)){
+  if (is.na(all.gene.table$conserved_type[i])){
+    two_conserved[i] <- "no"
+    human_specific[i] <- "no"
+    ultra_conserved[i] <- "no"
+    for (j in 1:3) conserved_type_list[[j]][i] <- 0 
+    next
+  }
+  conserved.vector<- as.numeric(strsplit2(all.gene.table$conserved_type[i],","))
+  two_conserved[i]<- ifelse(conserved.vector[1],"yes","no")
+  human_specific[i]<- ifelse(conserved.vector[2],"yes","no")
+  ultra_conserved[i]<- ifelse(conserved.vector[3],"yes","no")
+  for (j in 1:3) conserved_type_list[[j]][i] <- conserved.vector[j]
+}
+all.gene.table$human_specific <- factor(human_specific,levels=c("yes","no"))
+all.gene.table$two_conserved <- factor(two_conserved,levels=c("yes","no"))
+all.gene.table$ultra_conserved <- factor(ultra_conserved,levels=c("yes","no"))
+
+non.sig.gene.table <- all.gene.table[all.gene.table$gene_type=="non.sig",]
+#MA plot of non.sig genes
+ggplot(non.sig.gene.table,aes(x=logCPM,y=logFC,color=human_specific))+
+    geom_point(alpha=0.3)+
+    labs(color="",title="non.sig of human_specific")
+    # scale_color_manual(labels=c("increased","decreased"),values=c(color[1],color[2]))+
+    # geom_hline(yintercept = c(0.6,-0.6),color="magenta",linetype="dashed")
+ggplot(non.sig.gene.table,aes(x=logCPM,y=logFC,color=two_conserved))+
+    geom_point(alpha=0.3)+
+    labs(color="",title="non.sig of two_conserved")
+ggplot(non.sig.gene.table,aes(x=logCPM,y=logFC,color=ultra_conserved))+
+    geom_point(alpha=0.3)+
+    labs(color="",title="non.sig of ultra_conserved")
+
+# MA plot of significant genes
+sig.idx<- all.gene.table$gene_type=="sig.up" | all.gene.table$gene_type=="sig.down"
+sig.gene.table <- all.gene.table[sig.idx,]
+
+ggplot(sig.gene.table,aes(x=logCPM,y=logFC,color=human_specific))+
+    geom_point(alpha=0.3)+
+    labs(color="",title="sig of human_specific")
+
+ggplot(sig.gene.table,aes(x=logCPM,y=logFC,color=two_conserved))+
+    geom_point(alpha=0.3)+
+    labs(color="",title="sig of two_conserved")
+ggplot(sig.gene.table,aes(x=logCPM,y=logFC,color=ultra_conserved))+
+    geom_point(alpha=0.3)+
+    labs(color="",title="sig of ultra_conserved")
+# MA overlay !!need to choose good colors for visualization.....
+ggplot(sig.gene.table[sig.gene.table$human_specific=="no",],aes(x=logCPM,y=logFC),color="gray")+
+  geom_point(alpha=0.3)+
+  geom_point(data=sig.gene.table[sig.gene.table$human_specific=="yes",],aes(x=logCPM,y=logFC),color="blue",alpha=0.3)+
+  geom_point(data=sig.gene.table[sig.gene.table$two_conserved=="no",],aes(x=logCPM,y=logFC),color="black",alpha=0.3)+
+  geom_point(data=sig.gene.table[sig.gene.table$two_conserved=="yes",],aes(x=logCPM,y=logFC),color="green",alpha=0.3)+
+  geom_point(data=sig.gene.table[sig.gene.table$ultra_conserved=="no",],aes(x=logCPM,y=logFC),color="black",alpha=0.3)+
+  geom_point(data=sig.gene.table[sig.gene.table$ultra_conserved=="yes",],aes(x=logCPM,y=logFC),color="red",alpha=0.3)
+
+ggplot(non.sig.gene.table[non.sig.gene.table$human_specific=="no",],aes(x=logCPM,y=logFC),color="gray")+
+  geom_point(alpha=0.15)+
+  geom_point(data=non.sig.gene.table[non.sig.gene.table$human_specific=="yes",],aes(x=logCPM,y=logFC),color="blue",alpha=0.15)+
+  geom_point(data=non.sig.gene.table[non.sig.gene.table$two_conserved=="no",],aes(x=logCPM,y=logFC),color="black",alpha=0.15)+
+  geom_point(data=non.sig.gene.table[non.sig.gene.table$two_conserved=="yes",],aes(x=logCPM,y=logFC),color="green",alpha=0.15)+
+  geom_point(data=non.sig.gene.table[non.sig.gene.table$ultra_conserved=="no",],aes(x=logCPM,y=logFC),color="black",alpha=0.15)+
+  geom_point(data=non.sig.gene.table[non.sig.gene.table$ultra_conserved=="yes",],aes(x=logCPM,y=logFC),color="red",alpha=0.15)
+
+# barplot to show the gene numbers in each gene_type category
+ggplot(all.gene.table,aes(x=gene_type,fill=human_specific))+
+  geom_bar(position = "fill")
+
+ggplot(all.gene.table,aes(x=gene_type,fill=two_conserved))+
+  geom_bar(position = "fill")
+
+ggplot(all.gene.table,aes(x=gene_type,fill=ultra_conserved))+
+  geom_bar(position = "fill")
+
+## histogram of the numbers of peaks from different categories of gene type ||| can use barplot!!!!!! try violin plot!!!!
+names(conserved_type_list) <- c("two_conserved", "human_specific", "ultra_conserved")
+conserved_type_df <- data.frame(conserved_type_list)
+conserved_type_df$gene_type <- all.gene.table$gene_type
+ggplot(conserved_type_df,aes(x=human_specific,color=gene_type))+
+  geom_density()+
+  scale_x_continuous(limits = c(0,30))
+
+ggplot(conserved_type_df,aes(x=two_conserved,color=gene_type))+
+  geom_density()+
+  scale_x_continuous(limits=c(0,20))
+
+ggplot(conserved_type_df,aes(x=ultra_conserved,color=gene_type))+
+  geom_density()+
+  scale_x_continuous(limits=c(0,8))
+
+##the distribution of human-specific, two-conserved, and ultra-conserved peaks numbers; [the problem is there's genes with multiple types of peaks; how to visualize it is a problem]
+ggplot(conserved_type_df,aes(x=human_specific))+
+  geom_density()
+
+ggplot(conserved_type_df,aes(x=two_conserved))+
+  geom_density()
+
+ggplot(conserved_type_df,aes(x=ultra_conserved))+
+  geom_density()
+```
+
+#conserved type vs gene expression level analysis
+
+```{r}
+# make the dataframe for this analysis
+expression.table <- all.gene.table
+expression.table[,c(7,8,9)] <- NULL
+expression.table$human_specific <- conserved_type_df$human_specific
+expression.table$two_conserved <- conserved_type_df$two_conserved
+expression.table$ultra_conserved <- conserved_type_df$ultra_conserved
+# need to put the expression level data in
+intron_table <- read.table(countable.path$total.intron.table,sep="\t",header=T)
+colnames(intron_table)[9:12] <- c('basal1487',"basal2139","treat1487","treat2139")
+yy <- DGEList(counts=intron_table[9:12],genes=intron_table$Symbol,group=factor(c("N","N","T","T")))
+lib.size <- colSums(yy$counts)
+#use log2(cpm+1) to measure the whole genes 
+for (i in 1:4){
+  yy$counts[,i] <- log2(yy$counts[,i]/lib.size[i]*1000000+1)
+}
+expression.data <- matrix(,nrow=nrow(expression.table),ncol=4)  # order: basal1487, basal2139, treat1487, treat 2139
+for (i in 1:nrow(expression.table)){
+  ind <- as.character(yy$genes[,1])==expression.table$genes[i]
+  expression.data[i,]<- yy$counts[ind,]
+}
+colnames(expression.data) <- c("basal1487","basal2139","treat1487","treat2139")
+expression.table <- cbind(expression.table,expression.data)
+#calculate the log2cpm mean for basal and treatmetn
+log2.cpm.mean <- matrix(,nrow=nrow(expression.table),ncol=2)
+expression.table$basal.mean.log2cpm <- log2((2**expression.table$basal1487+2**expression.table$basal2139-2)/2+1) #minus 1 to get the raw cpm
+expression.table$treat.mean.log2cpm <- log2((2**expression.table$treat1487+2**expression.table$treat2139-2)/2+1)
+colnames(expression.table)[c(14,15)] <- rep("mean.log2cpm",2)
+expression.table1 <- expression.table[,-15]
+expression.table2 <- expression.table[,-14]
+expression.table <- rbind(expression.table1,expression.table2)
+expression.table$basalortreat <- c(rep("basal",17285),rep("treat",17285)) 
+human_specific_num <- vector("character",17285*2)
+two_conserved_num <- vector("character",17285*2)
+ultra_conserved_num <- vector("character",17285*2)
+for (i in 1:(2*17285)){
+  if (expression.table$human_specific[i]==0) {human_specific_num[i]="0"}
+  else if (expression.table$human_specific[i]>0 & expression.table$human_specific[i]< 4) {human_specific_num[i]="1-3"}
+  else if (expression.table$human_specific[i]>3 & expression.table$human_specific[i]< 7) {human_specific_num[i]="4-6"}
+  else if (expression.table$human_specific[i]>6 & expression.table$human_specific[i]< 11) {human_specific_num[i]="7-10"}
+  else if (expression.table$human_specific[i]>9 & expression.table$human_specific[i]< 16) {human_specific_num[i]="10-15"}
+  else if (expression.table$human_specific[i]> 15) {human_specific_num[i]=">15"}
+}
+
+for (i in 1:(2*17285)){
+  if (expression.table$two_conserved[i]==0) {two_conserved_num[i]="0"}
+  else if (expression.table$two_conserved[i]>0 & expression.table$two_conserved[i]< 4) {two_conserved_num[i]="1-3"}
+  else if (expression.table$two_conserved[i]>3 & expression.table$two_conserved[i]< 7) {two_conserved_num[i]="4-6"}
+  else if (expression.table$two_conserved[i]>6 & expression.table$two_conserved[i]< 11) {two_conserved_num[i]="7-10"}
+  else if (expression.table$two_conserved[i]>9 & expression.table$two_conserved[i]< 16) {two_conserved_num[i]="10-15"}
+  else if (expression.table$two_conserved[i]> 15) {two_conserved_num[i]=">15"}
+}
+for (i in 1:(2*17285)){
+  if (expression.table$ultra_conserved[i]==0) {ultra_conserved_num[i]="0"}
+  else if (expression.table$ultra_conserved[i]>0 & expression.table$ultra_conserved[i]< 4) {ultra_conserved_num[i]="1-3"}
+  else if (expression.table$ultra_conserved[i]>3 & expression.table$ultra_conserved[i]< 7) {ultra_conserved_num[i]="4-6"}
+  else if (expression.table$ultra_conserved[i]>6 & expression.table$ultra_conserved[i]< 11) {ultra_conserved_num[i]="7-10"}
+  else if (expression.table$ultra_conserved[i]> 10) {ultra_conserved_num[i]=">10"}
+}
+expression.table$human_specific_num <- factor(human_specific_num)
+expression.table$two_conserved_num <- factor(two_conserved_num)
+expression.table$ultra_conserved_num <- factor(ultra_conserved_num)
+levels(expression.table$human_specific_num) <- c("0","1-3","4-6","7-10","10-15",">15")
+levels(expression.table$two_conserved_num) <- c("0","1-3","4-6","7-10","10-15",">15")
+levels(expression.table$ultra_conserved_num) <- c("0","1-3","4-6","7-10",">10")
+
+#plot the expression barplot based on the number of peaks around 100kb
+ggplot(expression.table,aes(x=human_specific_num,y=mean.log2cpm))+
+  geom_violin(aes(fill=basalortreat),position="dodge")
+
+ggplot(expression.table,aes(x=two_conserved_num,y=mean.log2cpm))+
+  geom_violin(aes(fill=basalortreat),position="dodge")
+
+ggplot(expression.table,aes(x=ultra_conserved_num,y=mean.log2cpm))+
+  geom_violin(aes(fill=basalortreat),position="dodge")
+
+ggplot(expression.table,aes(x=human_specific_num,y=mean.log2cpm))+
+  geom_boxplot(aes(fill=basalortreat),position="dodge",notch=T)+
+  facet_grid(gene_type~.)
+
+ggplot(expression.table,aes(x=two_conserved_num,y=mean.log2cpm))+
+  geom_boxplot(aes(fill=basalortreat),position="dodge",notch=T)+
+  facet_grid(gene_type~.)
+
+ggplot(expression.table,aes(x=ultra_conserved_num,y=mean.log2cpm))+
+  geom_boxplot(aes(fill=basalortreat),position="dodge",notch=T)+
+  facet_grid(gene_type~.)
+
+ggplot(expression.table,aes(x=human_specific_num,y=mean.log2cpm))+
+  geom_boxplot(aes(fill=basalortreat),position="dodge",notch=T)
+ggplot(expression.table,aes(x=two_conserved_num,y=mean.log2cpm))+
+  geom_boxplot(aes(fill=basalortreat),position="dodge",notch=T)
+ggplot(expression.table,aes(x=ultra_conserved_num,y=mean.log2cpm))+
+  geom_boxplot(aes(fill=basalortreat),position="dodge",notch=T)
+## if want to compare between different conserved types across barplots; then need to correct the bias caused by total numbers difference (40000,20000,5000); could random sample 5000 genes [genes with >=1 human_specific peaks:15911 two_conserved:12999 ultra_conserved:7528] 
+# low.count genes:7000; non-sig gene:10000; sig.up:275 sig.down:100 ; at least plot the numbers in each plot because of the potential big bias.....
+# biase: number of peaks of different catogories; number of genes with at least one certain type of peaks 
 
 
 ```
+
+## 2-D / 3-D distribution of peak number (link to gene expression level)
+
+```{r}
+library(plyr)
+ggplot(expression.table,aes(x=human_specific,y=two_conserved))+
+  geom_jitter(width= 0.2, height = 0.2, alpha=0.05)
+  # stat_density2d(aes(fill = ..density..), geom = "raster", contour = FALSE)
+ggplot(expression.table,aes(x=two_conserved,y=ultra_conserved))+
+  geom_jitter(width= 0.2, height = 0.2, alpha=0.05)
+ggplot(expression.table,aes(x=human_specific,y=ultra_conserved))+
+  geom_jitter(width= 0.2, height = 0.2, alpha=0.05)
+
+ggplot(expression.table,aes(x=two_conserved,y=ultra_conserved))+
+  geom_jitter(aes(color=mean.log2cpm))
+# process the dataframe to get a median value for each combination of all the peak numbers
+log2fc <- expression.table$mean.log2cpm[17286:nrow(expression.table)] - expression.table$mean.log2cpm[1:17285]
+temp.df <- cbind(expression.table[1:17285,],basal.log2cpm=log2((2**expression.table$basal1487+2**expression.table$basal2139-2)/2+1),treat.log2cpm=log2((2**expression.table$treat1487+2**expression.table$treat2139-2)/2+1),log2fc=log2fc)
+## basal plot
+ggplot(temp.df,aes(human_specific,two_conserved,color=basal.log2cpm))+
+  geom_point()+
+  scale_color_gradient2(low="darkblue",high="darkred",midpoint=7)
+
+## log2fc plot
+# show all the genes. (sig.up)
+ggplot(temp.df,aes(human_specific,two_conserved,color=log2fc))+
+  geom_jitter(width=0.2,height=0.2,alpha=0.7)+
+  scale_color_gradient2(low="white",high="red",midpoint = median(temp.df$log2fc))
+
+#sig.down
+ggplot(temp.df,aes(human_specific,two_conserved,color=log2fc))+
+  geom_jitter(width=0.2,height=0.2,alpha=0.7)+
+  scale_color_gradient2(low="blue",high="white",midpoint = median(temp.df$log2fc))
+
+temp.df <- ddply(temp.df,c("human_specific","two_conserved"),summarize,median(log2fc)) # another option is to use aggregate()
+names(temp.df)[3] <- "median.log2fc"  
+ggplot(temp.df,aes(human_specific,two_conserved,color=median.log2fc))+
+  geom_point()+
+  scale_color_gradient2(low="darkblue",high="darkred",midpoint = median(temp.df$median.log2fc))
+
+``` 
 
