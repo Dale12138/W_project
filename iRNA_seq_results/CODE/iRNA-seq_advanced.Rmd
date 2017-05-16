@@ -364,6 +364,27 @@ ggplot(data=cpm(total_intron_result[[1]]),aes(x=log2(basal1487),color=color[2]))
 
 ```
 
+#Addition: test which down-regulated gene sets make more sence for polya or total ?
+
+```{r}
+down_test_genes <- scan(file="~/Desktop/Dale's/RELA_RNAseq/down_test_genes",character(),quote="")
+down_test_genes<- toupper(unique(down_test_genes))
+
+
+library(biomaRt)
+human= useMart(biomart = "ENSEMBL_MART_ENSEMBL",dataset = "hsapiens_gene_ensembl",host = "jul2015.archive.ensembl.org")
+# listFilters(human)
+# listAttributes(human)
+down_test_genes_ID <- getBM(attributes = c("external_gene_name","ensembl_gene_id"),filters = "external_gene_name",values =down_test_genes, mart=human)
+polya_ID<- getBM(attributes = c("external_gene_name","ensembl_gene_id"),filters = "external_gene_name",values =polya_intron_result[[2]][[3]]$table$genes, mart=human)
+total_ID<- getBM(attributes = c("external_gene_name","ensembl_gene_id"),filters = "external_gene_name",values =total_intron_result[[2]][[3]]$table$genes, mart=human)
+
+# sum(down_test_genes_ID[,2] %in% polya_ID[,2])  # 6 out of 153  #since the gees is from literature, so maybe the total rna-seq makes more sense....
+# sum(down_test_genes_ID[,2] %in% total_ID[,2])  # 10 out of 100 
+
+```
+
+
 1. tried to compare all the 8 groups at one round, but only get 3000 genes, even without filtering 10% lowly expressed genes; so can only do pairwise comparisons;
 tried with the threshold 10%, thus still have ~6000 genes to plot 
 
@@ -846,4 +867,12 @@ ggplot(temp.df,aes(human_specific,two_conserved,color=median.log2fc))+
   scale_color_gradient2(low="darkblue",high="darkred",midpoint = median(temp.df$median.log2fc))
 
 ``` 
+
+# test on Mandrup data (adipocites)
+
+```{r}
+adip_path="/home/mdwilson/hpf_trial/liangxi/projects/rela/public_data/Mandrup_group/star_bam/iRNA_output/intron_counttable.txt" # the order is DMSO1, DMSO2, Treat1, Treat2.
+adip_intron_result <- DE_test(adip_path,design,"total intron") 
+```
+
 
