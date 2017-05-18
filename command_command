@@ -514,7 +514,7 @@ do
 samtools sort -n $file -o ${file%%.*}"_sortedByReadname.bam" --threads 4 &
 done
 
-samtools sort -n WL646_none_aortic_HAoEC_none_hsap_2139_TNFa+TPCA-1_TCAG1Aligned_roughuniq.sortedByCoord.bam -o WL646_none_aortic_HAoEC_none_hsap_2139_TNFa+TPCA-1_TCAG1Aligned_roughuniq.sortedByReadname.bam --threads 8&
+samtools sort -n WL646_none_aortic_HAoEC_none_hsap_2139_TNFa+TPCA-1_TCAG1Aligned_roughuniq.sortedByCoord.bam -o 3.20917e+07WL646_none_aortic_HAoEC_none_hsap_2139_TNFa+TPCA-1_TCAG1Aligned_roughuniq.sortedByReadname.bam --threads 8&
 
 samtools sort -n WL648_none_aortic_HAoEC_none_hsap_1487_TNFa+TPCA-1_TCAG1Aligned_roughuniq.sortedByCoord.out.bam -o WL648_none_aortic_HAoEC_none_hsap_1487_TNFa+TPCA-1_TCAG1Aligned_roughuniq.sortedByReadname.out.bam --threads 8& 
 
@@ -702,9 +702,13 @@ the real intron libbrary: only around 1 million
 normalize teh azad rna track bw fiels
 1. convert teh bw to bedgraph
 
-
+bigtobedgraph in.bw out.bedgraph
 
 2. normalize bedgraph
-
+normalize and sort at first
+for i in *norm*;do sort -k1,1 -k2,2n $i > ${i%.*}".sorted.bedGraph";done
 
 3. convert normalized bedgraph to bw
+
+bedGraphToBigWig in.bedgraph ~/hpf_trial/genomes/hsap/ChromInfo_noRand.txt out.bw
+for i in *sort*;do bedGraphToBigWig $i ~/hpf_trial/genomes/hsap/ChromInfo_noRand.txt ${i%.wig.normed.sorted.bedGraph}".normed.wig.bw";done

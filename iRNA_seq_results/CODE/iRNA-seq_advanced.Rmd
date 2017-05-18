@@ -614,6 +614,7 @@ color <- brewer.pal(n=3,name="Set1")
 # gene.table.path <- "/home/mdwilson/hpf_trial/liangxi/projects/rela/peakfile/conserved_RELA/gene_table_temp"
 # write.table(gene.table,file=gene.table.path,sep="\t",row.names = F,col.names = F)
 path <- "/home/mdwilson/hpf_trial/liangxi/projects/rela/peakfile/conserved_RELA/total_gene_table"
+# path <- "/home/mdwilson/hpf_trial/liangxi/projects/rela/peakfile/conserved_RELA/total_gene_table_not_exclusive" # used to test when three and two -conserved is not exclusive 
 all.gene.table<- read.table(path,sep="\t",header=F,stringsAsFactors = F)
 all.gene.table$V6 <- NULL
 colnames(all.gene.table) <- c("genes","logFC","logCPM","FDR","gene_type","conserved_type") #note:the conserved type is two_conserved, human_specific, ultra_conserved
@@ -824,7 +825,37 @@ ggplot(expression.table,aes(x=ultra_conserved_num,y=mean.log2cpm))+
 # low.count genes:7000; non-sig gene:10000; sig.up:275 sig.down:100 ; at least plot the numbers in each plot because of the potential big bias.....
 # biase: number of peaks of different catogories; number of genes with at least one certain type of peaks 
 
+## detailed look at the association from the number of peaks and expression level
+# only plot every peak numbers can you observe the additive effects (not some optimal stuff....); the affects of three conserved peaks are subtle, maybe because of the total input numbers??? 
+ggplot(expression.table,aes(x=factor(human_specific),y=mean.log2cpm))+
+  geom_boxplot(aes(fill=basalortreat),position="dodge",notch=T)
+ggplot(expression.table,aes(x=factor(two_conserved),y=mean.log2cpm))+
+  geom_boxplot(aes(fill=basalortreat),position="dodge",notch=T)
+ggplot(expression.table,aes(x=factor(ultra_conserved),y=mean.log2cpm))+
+  geom_boxplot(aes(fill=basalortreat),position="dodge",notch=T)
 
+# regression of the association between peak numbers and expression (three subcategories: 1, 2, 3 conserved)
+ggplot(expression.table,aes(x=human_specific,y=mean.log2cpm))+
+  geom_smooth(method="lm",color=color[1])+
+  geom_smooth(aes(x=two_conserved,y=mean.log2cpm),color=color[2],method="lm")+
+  geom_smooth(aes(x=ultra_conserved,y=mean.log2cpm),color=color[3],method="lm")
+
+ggplot(expression.table,aes(x=human_specific,y=mean.log2cpm))+
+  geom_smooth(color=color[1])+
+  geom_smooth(aes(x=two_conserved,y=mean.log2cpm),color=color[2])+
+  geom_smooth(aes(x=ultra_conserved,y=mean.log2cpm),color=color[3])
+
+ggplot(expression.table,aes(x=human_specific,y=mean.log2cpm))+
+  geom_smooth()+
+  geom_point(alpha=0.05)
+
+ggplot(expression.table,aes(x=two_conserved,y=mean.log2cpm))+
+  geom_smooth()+
+  geom_point(alpha=0.05)
+
+ggplot(expression.table,aes(x=ultra_conserved,y=mean.log2cpm))+
+  geom_smooth()+
+  geom_point(alpha=0.05)
 ```
 
 ## 2-D / 3-D distribution of peak number (link to gene expression level)
@@ -866,6 +897,7 @@ ggplot(temp.df,aes(human_specific,two_conserved,color=median.log2fc))+
   geom_point()+
   scale_color_gradient2(low="darkblue",high="darkred",midpoint = median(temp.df$median.log2fc))
 
+
 ``` 
 
 # test on Mandrup data (adipocites)
@@ -873,6 +905,11 @@ ggplot(temp.df,aes(human_specific,two_conserved,color=median.log2fc))+
 ```{r}
 adip_path="/home/mdwilson/hpf_trial/liangxi/projects/rela/public_data/Mandrup_group/star_bam/iRNA_output/intron_counttable.txt" # the order is DMSO1, DMSO2, Treat1, Treat2.
 adip_intron_result <- DE_test(adip_path,design,"total intron") 
+
+# original intron-RNA-seq :  # not the same number, a little difference, and after filtering not many got removed, not like our librrary,, dont know why..  ~1000 sig.increased; ~650 sig.decreased.
+adip_path_ori="/home/mdwilson/hpf_trial/liangxi/projects/rela/public_data/Mandrup_group/star_bam/iRNA_output/intron_result.txt"
+adip_df_ori <- read.table(adip_path_ori,header=T)
+subset(adip_df_ori,Padj< 0.1 & logFC > 0)
 ```
 
 
